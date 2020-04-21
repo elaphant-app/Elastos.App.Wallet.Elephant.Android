@@ -5,7 +5,7 @@
     <!-- About screen blog label -->
     <string name="About.blog">博客</string>
     <!-- About screen footer -->
-    <string name="About.footer">由 Elastos Application Lab制作。版本%1$s Build %2$s</string>
+    <string name="About.footer">由 Elaphant Team 制作。版本%1$s Build %2$s</string>
     <!-- Privay Policy button label -->
     <string name="About.privacy">隐私政策</string>
     <!-- About screen reddit label -->
@@ -963,6 +963,7 @@
     <string name="upgrade_cancel">下次</string>
 
     <string name="Did.Will.Get">%1$s 将要获取您的:</string>
+    <string name="MenuButton.moment">我的动态</string>
     <string name="MenuButton.authorizations">授权</string>
     <string name="Did.Authorized">已授权</string>
     <string name="Did.Authorize">授权</string>
@@ -1055,7 +1056,7 @@
     <string name="pin_author_vote_msg">请输入PIN码授权投票</string>
 
     <string name="loading_hint">请稍候....</string>
-    <string name="auto_vote_hint">自动使用ELA余额投票</string>
+    <string name="auto_dpos_hint">自动使用ELA余额DPoS投票</string>
     <string name="explore_vote_about_desc1">ELA投票</string>
     <string name="explore_vote_about_desc2">投票小程序允许你每次最多投给36个DPoS超级节点。</string>
     <string name="vote_balance_not_insufficient">ELA余额少于1</string>
@@ -1178,4 +1179,74 @@
     <string name="clear_cache_negative_btn">取消</string>
 
     <string name="elapay_request_params_error">请求参数错误</string>
+
+    <string name="My_chat_title">聊天</string>
+    <string name="My_chat_tab_message_title">消息</string>
+    <string name="My_chat_tab_friends_title">好友</string>
+
+    <string name="My_add_friend">添加好友</string>
+    <string name="My_chat_add_device">加好友</string>
+    <string name="My_chat_join_group">入群</string>
+    <string name="My_chat_qr_code">我的QR</string>
+    <string name="My_qr_code_title">我的QR</string>
+    <string name="My_new_friends_title">新的朋友</string>
+
+    <string name="My_chat_pop_title">设置聊天昵称</string>
+    <string name="My_chat_pop_hint">输入昵称</string>
+    <string name="My_chat_pop_store_hint">昵称将存储在区块链上。</string>
+
+    <string name="My_chat_pop_cancel">取消</string>
+    <string name="My_chat_pop_set_now">立即设置</string>
+
+    <string name="My_chat_scan_hint">输入DID或Carrier地址</string>
+    <string name="My_chat_scan_paste">粘贴</string>
+    <string name="My_chat_QR_hint">扫码加我为好友</string>
+
+    <string name="My_chat_new_accept">接受</string>
+    <string name="My_chat_new_waitforaccept">等待接受</string>
+    <string name="My_chat_new_accepted">已接受</string>
+
+    <string name="My_chat_friends_send_token">转账</string>
+    <string name="My_chat_friends_message">消息</string>
+    <string name="My_chat_friends_edit">编辑</string>
+    <string name="My_chat_friends_delete">删除</string>
+
+    <string name="My_chat_nickname_title">昵称</string>
+    <string name="My_chat_nickname_save">保存</string>
+
+    <string name="My_chat_detail_send">发送</string>
+
+    <string name="My_chat_friends_delete_pop_hint">将删除联系人<Data><![CDATA[<font color="#ff3365">%1$s</font>]]></Data>，同时删除与该联系人的聊天记录。</string>
+    <string name="My_chat_friends_delete_pop_cancel">取消</string>
+    <string name="My_chat_friends_delete_pop_confirm">确认</string>
+
+    <string name="My_chat_edit_nickname_empty_toast">昵称不能为空</string>
+
+    <string name="My_chat_scan_pop_title">设置聊天好友昵称</string>
+    <string name="My_chat_scan_pop_hint">输入好友昵称</string>
+
+    <string name="My_qr_switch_btn_did">DID</string>
+    <string name="My_qr_switch_btn_carrier_addr">Carrier地址</string>
+
+    <string name="My_scan_has_add_friend">你已经添加了该好友</string>
+    <string name="My_scan_switch_btn_hint">显示carrier地址</string>
+
+    <string name="crc_auto_vote_hint">自动使用ELA余额CRC投票</string>
+    <string name="crc_vote_hint">您将要投票</string>
+    <string name="crc_votes">票数:（ELA）</string>
+    <string name="crc_members_title">CR 理事会成员详情:</string>
+    <string name="crc_view_all">查看所有</string>
+    <string name="crc_vote_dpos_nodes">%1$d 个节点(DPoS)</string>
+    <string name="crc_vote_crc_nodes">%1$d 理事会成员(CR)</string>
+    <string name="crc_header_members_title">详情</string>
+
+    <string name="crc_scheme_candidate_must_not_empty">Candidate参数不能为空</string>
+    <string name="crc_scheme_candidate_parse_error">Candidate无法解析</string>
+    <string name="crc_scheme_votes_parse_error">Votes无法解析</string>
+    <string name="crc_scheme_votes_must_not_empty">Votes参数不能为空</string>
+    <string name="crc_scheme_votes_duplicate_did">Candidate参数存在重复DID</string>
+    <string name="crc_scheme_votes_total_out">Votes所有参数值的和不能超过100</string>
+    <string name="crc_scheme_candidate_and_votes_inconsistent">Candidate参数的个数和Votes参数的个数不一致</string>
+    <string name="crc_scheme_inactive_did">参数里有未激活的DID</string>
+    <string name="crc_scheme_votes_must_positive">Votes参数应为正数</string>
 </resources>

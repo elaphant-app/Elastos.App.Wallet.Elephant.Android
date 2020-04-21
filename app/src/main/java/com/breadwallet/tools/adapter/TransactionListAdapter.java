@@ -28,6 +28,7 @@ import com.breadwallet.tools.util.Utils;
 import com.breadwallet.wallet.WalletsMaster;
 import com.breadwallet.wallet.abstracts.BaseWalletManager;
 import com.breadwallet.wallet.wallets.CryptoTransaction;
+import com.breadwallet.wallet.wallets.ela.ElaDataUtils;
 import com.breadwallet.wallet.wallets.ethereum.WalletEthManager;
 import com.platform.entities.TxMetaData;
 import com.platform.tools.KVStoreManager;
@@ -297,7 +298,24 @@ public class TransactionListAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         String formattedAmount = CurrencyUtils.getFormattedAmount(mContext, preferredIso, amount, wm.getUiConfiguration().getMaxDecimalPlacesForUi());
         convertView.transactionAmount.setText(formattedAmount);
 
-        convertView.transactionVoteFlag.setVisibility(item.isVote() ? View.VISIBLE : View.GONE);
+        String type = item.getType();
+        String txType = item.getTxType();
+        convertView.transactionDposFlag.setVisibility(View.GONE);
+        convertView.transactionCrcFlag.setVisibility(View.GONE);
+        if(!StringUtil.isNullOrEmpty(type) && !StringUtil.isNullOrEmpty(txType)) {
+            if(type.equals("spend")) {
+                if(ElaDataUtils.getVoteType(type, txType) == 1) {
+                    convertView.transactionDposFlag.setVisibility(View.VISIBLE);
+                    convertView.transactionCrcFlag.setVisibility(View.GONE);
+                } else if(ElaDataUtils.getVoteType(type, txType) == 2) {
+                    convertView.transactionDposFlag.setVisibility(View.GONE);
+                    convertView.transactionCrcFlag.setVisibility(View.VISIBLE);
+                } else if(ElaDataUtils.getVoteType(type, txType) == 3) {
+                    convertView.transactionDposFlag.setVisibility(View.VISIBLE);
+                    convertView.transactionCrcFlag.setVisibility(View.VISIBLE);
+                }
+            }
+        }
 
         int blockHeight = item.getBlockHeight();
         int lastBlockHeight = BRSharedPrefs.getLastBlockHeight(mContext, wm.getIso());
@@ -344,20 +362,9 @@ public class TransactionListAdapter extends RecyclerView.Adapter<RecyclerView.Vi
             convertView.transactionStatus.setText(!received ? sendingTo : receivingVia);
             convertView.transactionStatus.setTextColor(mContext.getColor(!received ? R.color.total_assets_usd_color : R.color.transaction_amount_received_color));
         }
-        if (wm.getIso().equalsIgnoreCase("ELA")) {
+        if (wm.getIso().equalsIgnoreCase("ELA") || wm.getIso().equalsIgnoreCase("IOEX")) {
             String status = item.getStatus();
-            if (level==0 && !StringUtil.isNullOrEmpty(status) && status.equalsIgnoreCase("confirmed")) {
-                convertView.transactionStatus.setText(!received ? sentTo : receivedVia);
-                convertView.transactionStatus.setTextColor(mContext.getColor(!received ? R.color.tx_send_color : R.color.transaction_amount_received_color));
-            } else {
-                convertView.transactionStatus.setText(!received ? sendingTo : receivingVia);
-                convertView.transactionIcon.setBackgroundResource(!received ? R.drawable.ellipse_sending : R.drawable.ellipse_receive);
-                convertView.transactionStatus.setTextColor(mContext.getColor(!received ? R.color.total_assets_usd_color : R.color.transaction_amount_received_color));
-            }
-        }
-
-        if(wm.getIso().equalsIgnoreCase("IOEX")){
-            if (level==0) {
+            if (level==0 && (status==null || status.equalsIgnoreCase("confirmed"))) {
                 convertView.transactionStatus.setText(!received ? sentTo : receivedVia);
                 convertView.transactionStatus.setTextColor(mContext.getColor(!received ? R.color.tx_send_color : R.color.transaction_amount_received_color));
             } else {
@@ -504,7 +511,8 @@ public class TransactionListAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         public BaseTextView transactionAmount;
         public BaseTextView transactionDetail;
         public BaseTextView transactionStatus;
-        public BaseTextView transactionVoteFlag;
+        public BaseTextView transactionDposFlag;
+        public BaseTextView transactionCrcFlag;
         public Button transactionFailed;
         public ProgressBar transactionProgress;
 
@@ -519,7 +527,8 @@ public class TransactionListAdapter extends RecyclerView.Adapter<RecyclerView.Vi
             transactionFailed = view.findViewById(R.id.tx_failed_button);
             transactionProgress = view.findViewById(R.id.tx_progress);
             transactionIcon = view.findViewById(R.id.tx_status_icon);
-            transactionVoteFlag = view.findViewById(R.id.vote_flag);
+            transactionDposFlag = view.findViewById(R.id.dpos_vote_flag);
+            transactionCrcFlag = view.findViewById(R.id.crc_vote_flag);
         }
     }
 

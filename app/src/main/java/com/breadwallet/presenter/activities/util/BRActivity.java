@@ -36,7 +36,7 @@ import com.breadwallet.tools.util.Utils;
 import com.breadwallet.wallet.WalletsMaster;
 import com.breadwallet.wallet.util.CryptoUriParser;
 import com.elastos.jni.UriFactory;
-import com.elastos.jni.utils.StringUtils;
+import com.elastos.jni.utils.SchemeStringUtils;
 import com.platform.HTTPServer;
 import com.platform.tools.BRBitId;
 
@@ -229,7 +229,15 @@ public class BRActivity extends FragmentActivity implements BreadApp.OnAppBackgr
                                 e.printStackTrace();
                             }
                             String result = data.getStringExtra("result");
-                            if (CryptoUriParser.isCryptoUrl(BRActivity.this, result))
+                            String type = data.getStringExtra("type");
+                            if(!StringUtil.isNullOrEmpty(type)) {
+                                if(StringUtil.isNullOrEmpty(result)) return;
+                                if(type.equals(BRConstants.CHAT_SINGLE_TYPE)) {
+                                    mHomeActivity.showChatFragment(result);
+                                } else {
+                                    UiUtils.startGroupNameActivity(BRActivity.this, result);
+                                }
+                            } else if (CryptoUriParser.isCryptoUrl(BRActivity.this, result))
                                 CryptoUriParser.processRequest(BRActivity.this, result,
                                         WalletsMaster.getInstance(BRActivity.this).getCurrentWallet(BRActivity.this));
                             else if (BRBitId.isBitId(result))
@@ -282,7 +290,7 @@ public class BRActivity extends FragmentActivity implements BreadApp.OnAppBackgr
                     UriFactory uri = new UriFactory(url);
                     String scheme = uri.getScheme();
                     String host = uri.getHost();
-                    if (!StringUtils.isNullOrEmpty(scheme) && !StringUtils.isNullOrEmpty(host)) {
+                    if (!SchemeStringUtils.isNullOrEmpty(scheme) && !SchemeStringUtils.isNullOrEmpty(host)) {
                         if(scheme.equals("elaphant") || scheme.equals("elastos")) {
                             switch (host) {
                                 case "multitx":
@@ -302,6 +310,9 @@ public class BRActivity extends FragmentActivity implements BreadApp.OnAppBackgr
                                     return;
                                 case "eladposvote":
                                     UiUtils.startVoteActivity(this, url);
+                                    return;
+                                case "elacrcvote":
+                                    UiUtils.startCrcActivity(this, url);
                                     return;
                                 default:
                                     if(mHomeActivity != null) {

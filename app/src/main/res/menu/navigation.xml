@@ -11,6 +11,11 @@
         android:icon="@drawable/ic_nav_explore"
         android:title="" />
 
+   <!-- <item
+        android:id="@+id/navigation_chat"
+        android:icon="@drawable/ic_nav_chat"
+        android:title="" />-->
+
     <item
         android:id="@+id/navigation_notifications"
         android:icon="@drawable/ic_nav_setting"

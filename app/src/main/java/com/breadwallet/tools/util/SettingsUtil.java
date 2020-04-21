@@ -3,6 +3,7 @@ package com.breadwallet.tools.util;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 import android.view.View;
 
 import com.breadwallet.R;
@@ -24,16 +25,16 @@ import com.breadwallet.presenter.activities.settings.SyncBlockchainActivity;
 import com.breadwallet.presenter.activities.settings.UnlinkActivity;
 import com.breadwallet.presenter.entities.BRSettingsItem;
 import com.breadwallet.presenter.interfaces.BRAuthCompletion;
-import com.breadwallet.tools.animation.ElaphantDialog;
+import com.breadwallet.tools.animation.ElaphantDialogText;
 import com.breadwallet.tools.animation.UiUtils;
 import com.breadwallet.tools.manager.BRSharedPrefs;
 import com.breadwallet.tools.security.AuthManager;
-import com.breadwallet.wallet.WalletsMaster;
-import com.breadwallet.wallet.abstracts.BaseWalletManager;
 import com.breadwallet.wallet.wallets.bitcoin.WalletBchManager;
 import com.breadwallet.wallet.wallets.bitcoin.WalletBitcoinManager;
 import com.breadwallet.wallet.wallets.ela.WalletElaManager;
 import com.tencent.bugly.beta.Beta;
+
+import org.chat.lib.utils.ChatUiUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -84,7 +85,13 @@ public final class SettingsUtil {
 
     public static List<BRSettingsItem> getMainSettings(final Activity activity) {
         List<BRSettingsItem> settingsItems = new ArrayList<>();
-        final BaseWalletManager walletManager = WalletsMaster.getInstance(activity).getCurrentWallet(activity);
+
+//        settingsItems.add(new BRSettingsItem(activity.getString(R.string.MenuButton_moment), "", new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                ChatUiUtils.startMomentActivity(activity);
+//            }
+//        }, false, R.drawable.ic_moment));
 
         settingsItems.add(new BRSettingsItem(activity.getString(R.string.MenuButton_authorizations), "", new View.OnClickListener() {
             @Override
@@ -137,7 +144,7 @@ public final class SettingsUtil {
 //            @Override
 //            public void onClick(View v) {
 //                String url = "https://redpacket.elastos.org";
-//                UiUtils.openUrlByBrowser(activity, url);
+//                ChatUiUtils.openUrlByBrowser(activity, url);
 //            }
 //        }, false, R.drawable.ic_red_package));
 
@@ -151,17 +158,17 @@ public final class SettingsUtil {
         settingsItems.add(new BRSettingsItem(activity.getString(R.string.Clear_cache_title), "", new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                final ElaphantDialog elaphantDialog = new ElaphantDialog(activity);
+                final ElaphantDialogText elaphantDialog = new ElaphantDialogText(activity);
                 elaphantDialog.setMessageStr(activity.getString(R.string.clear_cache_message));
                 elaphantDialog.setPositiveStr(activity.getString(R.string.clear_cache_positive_btn));
                 elaphantDialog.setNegativeStr(activity.getString(R.string.clear_cache_negative_btn));
-                elaphantDialog.setPositiveListener(new ElaphantDialog.OnPositiveClickListener() {
+                elaphantDialog.setPositiveListener(new ElaphantDialogText.OnPositiveClickListener() {
                     @Override
                     public void onClick() {
                         UiUtils.clearCache(activity);
                     }
                 });
-                elaphantDialog.setNegativeListener(new ElaphantDialog.OnNegativeClickListener() {
+                elaphantDialog.setNegativeListener(new ElaphantDialogText.OnNegativeClickListener() {
                     @Override
                     public void onClick() {
                         elaphantDialog.dismiss();
@@ -179,8 +186,38 @@ public final class SettingsUtil {
                 activity.overridePendingTransition(R.anim.enter_from_right, R.anim.exit_to_left);
             }
         }, false, R.drawable.ic_about));
+
+//        settingsItems.add(new BRSettingsItem("测试push", "", new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                showPushDialog(activity);
+//            }
+//        }, false, R.drawable.ic_about));
         return settingsItems;
     }
+
+//    private static void showPushDialog(final Activity activity) {
+//        final MyNicknameDialog elaphantDialog = new MyNicknameDialog(activity);
+//        elaphantDialog.setTitleStr("Set nickname to chat");
+//        elaphantDialog.setMessageStr("Input your nickname");
+//        elaphantDialog.setPositiveStr("Set Now");
+//        elaphantDialog.setNegativeStr("Cancel");
+//        elaphantDialog.setPositiveListener(new MyNicknameDialog.OnPositiveClickListener() {
+//            @Override
+//            public void onClick() {
+//                String did = elaphantDialog.getEditText();
+//                elaphantDialog.dismiss();
+//            }
+//        });
+//        elaphantDialog.setNegativeListener(new MyNicknameDialog.OnNegativeClickListener() {
+//            @Override
+//            public void onClick() {
+//                elaphantDialog.dismiss();
+//            }
+//        });
+//        elaphantDialog.show();
+//    }
+
 
     public static List<BRSettingsItem> getPreferencesSettings(final Activity activity) {
         List<BRSettingsItem> items = new ArrayList<>();

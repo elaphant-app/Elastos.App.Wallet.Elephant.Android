@@ -26,20 +26,20 @@ import com.breadwallet.tools.security.BRKeyStore;
 import com.breadwallet.tools.threads.executor.BRExecutor;
 import com.breadwallet.tools.util.StringUtil;
 import com.breadwallet.wallet.wallets.ela.ElaDataSource;
+import com.breadwallet.wallet.wallets.ela.ElaDataUtils;
 import com.breadwallet.wallet.wallets.ela.WalletElaManager;
 import com.breadwallet.wallet.wallets.ela.response.create.ElaAttribute;
 import com.breadwallet.wallet.wallets.ela.response.create.ElaTransaction;
 import com.breadwallet.wallet.wallets.ela.response.create.ElaTransactionRes;
 import com.elastos.jni.AuthorizeManager;
 import com.elastos.jni.Utility;
-import com.elastos.jni.utils.StringUtils;
+import com.elastos.jni.utils.SchemeStringUtils;
 import com.google.gson.Gson;
+import com.platform.APIClient;
 
 import org.elastos.sdk.keypair.ElastosKeypairSign;
 import org.json.JSONObject;
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
@@ -132,7 +132,7 @@ public class MultiSignTxActivity extends BRActivity {
         }
 
         String mn = getMn();
-        if (!StringUtils.isNullOrEmpty(mn)) {
+        if (!SchemeStringUtils.isNullOrEmpty(mn)) {
             mMyPublicKey = Utility.getInstance(this).getSinglePublicKey(mn);
         }
 
@@ -355,9 +355,9 @@ public class MultiSignTxActivity extends BRActivity {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                String url = ElaDataSource.getInstance(getApplicationContext()).getUrl("balance/" + mAddress);
+                String url = ElaDataUtils.getUrl(MultiSignTxActivity.this, "balance/" + mAddress);
                 try {
-                    String result = ElaDataSource.getInstance(getApplicationContext()).urlGET(url);
+                    String result = APIClient.urlGET(MultiSignTxActivity.this, url);
                     JSONObject jsonObject = new JSONObject(result);
                     final String balance = jsonObject.getString("result");
                     runOnUiThread(new Runnable() {

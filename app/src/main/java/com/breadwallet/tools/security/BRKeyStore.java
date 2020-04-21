@@ -922,7 +922,7 @@ public class BRKeyStore {
             if (Utils.isEmulatorOrDebug(context))
                 intent = mKeyguardManager.createConfirmDeviceCredentialIntent(alias, context.getString(R.string.UnlockScreen_touchIdPrompt_android));
             if (intent != null) {
-                intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 app.startActivityForResult(intent, requestCode);
             } else {
                 Log.e(TAG, "showAuthenticationScreen: failed to create intent for auth");
@@ -1142,7 +1142,7 @@ public class BRKeyStore {
 //                    public void run() {
 //                        BRDialog.hideDialog();
 //                        BaseWalletManager wm = WalletsMaster.getInstance(app).getCurrentWallet(app);
-//                        UiUtils.showSupportFragment((FragmentActivity) app, BRConstants.FAQ_LOOP_BUG, wm);
+//                        ChatUiUtils.showSupportFragment((FragmentActivity) app, BRConstants.FAQ_LOOP_BUG, wm);
 //                    }
 //                });
 //

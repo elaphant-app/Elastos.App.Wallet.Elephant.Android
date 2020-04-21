@@ -67,7 +67,6 @@ import com.platform.tools.KVStoreManager;
 import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
-import java.util.Locale;
 
 /**
  * Created by byfieldj on 1/16/18.
@@ -281,9 +280,7 @@ public class WalletActivity extends BRActivity implements InternetManager.Connec
                 WalletsMaster.getInstance(app).refreshBalances(app);
                 WalletsMaster.getInstance(app).getCurrentWallet(app).refreshAddress(app);
                 WalletElaManager.getInstance(app).updateTxHistory();
-                WalletElaManager.getInstance(app).checkTxHistory();
                 WalletIoexManager.getInstance(app).updateTxHistory();
-                ElaDataSource.getInstance(app).getProducerByTxid();
             }
         });
 
@@ -299,6 +296,9 @@ public class WalletActivity extends BRActivity implements InternetManager.Connec
         setPriceTags(cryptoPreferred, false);
 
     }
+
+
+
 
     private void startSyncLoggerIfNeeded() {
         if (Utils.isEmulatorOrDebug(this) && RUN_LOGGER) {
@@ -339,7 +339,7 @@ public class WalletActivity extends BRActivity implements InternetManager.Connec
         mCurrencyTitle.setText(wm.getIso().equalsIgnoreCase("ELAETHSC")?"ELA/ETHSC":wm.getIso());
         mCurrencyPriceUsd.setText(String.format("%s / %s", fiatExchangeRate, wm.getIso().equalsIgnoreCase("ELAETHSC")?"ELA":wm.getIso()));
         mBalancePrimary.setText(fiatBalance);
-        mBalanceSecondary.setText(cryptoBalance.replace(wm.getIso(), ""));
+        mBalanceSecondary.setText(cryptoBalance.replace(wm.getIso().equalsIgnoreCase("ELAETHSC")?"ELA":wm.getIso(), ""));
 
         BRExecutor.getInstance().forLightWeightBackgroundTasks().execute(new Runnable() {
             @Override
@@ -471,9 +471,7 @@ public class WalletActivity extends BRActivity implements InternetManager.Connec
                         mReturnUrl = factory.getReturnUrl();
                         mAppId = factory.getAppID();
                         mOrderId = factory.getOrderID();
-                        Log.i(TAG, "walletActivity1 did:"+did+" appName:"+appName+" appId:"+appId+" PK: "+PK);
                         boolean isValide = AuthorizeManager.verify(WalletActivity.this, did, PK, appName, appId);
-                        Log.i(TAG, "walletActivity1 isValide: "+isValide);
                         if(!isValide) return;
                         BaseWalletManager wm = WalletsMaster.getInstance(WalletActivity.this).getCurrentWallet(WalletActivity.this);
                         String result = CryptoUriParser.createElapayUrl(wm, factory.getAmount(), factory.getReceivingAddress(), des);

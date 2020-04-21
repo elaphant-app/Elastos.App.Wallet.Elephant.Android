@@ -3,7 +3,7 @@ package com.elastos.jni;
 import android.net.Uri;
 
 import com.breadwallet.tools.util.StringUtil;
-import com.elastos.jni.utils.StringUtils;
+import com.elastos.jni.utils.SchemeStringUtils;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -80,9 +80,17 @@ public class UriFactory {
         return getValue("RequestInfo".toLowerCase());
     }
 
+    public String getCandidates() {
+        return getValue("Candidates".toLowerCase());
+    }
+
+    public String getVotes() {
+        return getValue("Votes".toLowerCase());
+    }
+
     public String getCandidatePublicKeys() {
         String candidate = getValue("CandidatePublicKeys".toLowerCase());
-        if (StringUtils.isNullOrEmpty(candidate)) return null;
+        if (SchemeStringUtils.isNullOrEmpty(candidate)) return null;
         return candidate.trim();
     }
 
@@ -121,7 +129,13 @@ public class UriFactory {
         parse(url);
     }
 
+    private String mUrl;
+    public String getUrl() {
+        return mUrl;
+    }
+
     public void parse(String url) {
+        mUrl = url;
         try {
             if (StringUtil.isNullOrEmpty(url)) return;
             if (url.toUpperCase().contains("ELAPHANT%3A%2F%2F") || url.toUpperCase().contains("ELASTOS%3A%2F%2F")) {

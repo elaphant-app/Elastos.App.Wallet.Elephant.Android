@@ -8,6 +8,7 @@ import com.breadwallet.tools.animation.UiUtils;
 import com.breadwallet.tools.util.BRConstants;
 import com.breadwallet.tools.util.StringUtil;
 import com.breadwallet.wallet.wallets.ela.ElaDataSource;
+import com.breadwallet.wallet.wallets.ela.ElaDataUtils;
 
 import org.json.JSONArray;
 
@@ -122,6 +123,17 @@ public class BRSharedPrefs {
     public static String getReceiveAddress(Context context, String iso) {
         SharedPreferences prefs = context.getSharedPreferences(UiUtils.getCacheProviderName(context, PREFS_NAME), Context.MODE_PRIVATE);
         return prefs.getString("receive_address" + iso.toUpperCase(), "");
+    }
+
+    public static void putElaPK(Context context, String PK) {
+        SharedPreferences.Editor editor = context.getSharedPreferences(UiUtils.getCacheProviderName(context, PREFS_NAME), Context.MODE_PRIVATE).edit();
+        editor.putString("elaPk", PK);
+        editor.apply();
+    }
+
+    public static String getElaPK(Context context) {
+        SharedPreferences prefs = context.getSharedPreferences(UiUtils.getCacheProviderName(context, PREFS_NAME), Context.MODE_PRIVATE);
+        return prefs.getString("elaPk", "");
     }
 
     public static void putReceiveAddress(Context ctx, String tmpAddr, String iso) {
@@ -323,7 +335,7 @@ public class BRSharedPrefs {
 
     public static String getElaNode(Context context, String key){
         SharedPreferences prefs = context.getSharedPreferences(UiUtils.getCacheProviderName(context, PREFS_NAME), Context.MODE_PRIVATE);
-        return prefs.getString(key, ElaDataSource.ELA_NODE);
+        return prefs.getString(key, ElaDataUtils.ELA_NODE);
     }
 
     public static void putVersionCode(Context context, String key, int value) {
@@ -404,17 +416,17 @@ public class BRSharedPrefs {
     }
 
     //if the user prefers all in crypto units, not fiat currencies
-    public static boolean isAuthorAuto(Context activity, String did) {
-        if(StringUtil.isNullOrEmpty(did)) return false;
+    public static boolean isAuthorAuto(Context activity, String appId) {
+        if(StringUtil.isNullOrEmpty(appId)) return false;
         SharedPreferences prefs = activity.getSharedPreferences(UiUtils.getCacheProviderName(activity, PREFS_NAME), Context.MODE_PRIVATE);
-        return prefs.getBoolean(did, false);
+        return prefs.getBoolean(appId, false);
     }
 
     //if the user prefers all in crypto units, not fiat currencies
-    public static void setIsAuthorAuto(Context activity, String did, boolean b) {
+    public static void setIsAuthorAuto(Context activity, String appId, boolean b) {
         SharedPreferences prefs = activity.getSharedPreferences(UiUtils.getCacheProviderName(activity, PREFS_NAME), Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
-        editor.putBoolean(did, b);
+        editor.putBoolean(appId, b);
         editor.apply();
     }
 
@@ -692,26 +704,65 @@ public class BRSharedPrefs {
         return prefs.getBoolean("disclaimshow", true);
     }
 
-    public static void setAutoVote(Context context, boolean is){
+    public static void setAutoCrc(Context context, boolean is){
+        SharedPreferences prefs = context.getSharedPreferences(UiUtils.getCacheProviderName(context, PREFS_NAME), Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putBoolean("autoCrc", is);
+        editor.apply();
+    }
+
+    public static boolean getAutoCrc(Context context){
+        SharedPreferences prefs = context.getSharedPreferences(UiUtils.getCacheProviderName(context, PREFS_NAME), Context.MODE_PRIVATE);
+        return prefs.getBoolean("autoCrc", false);
+    }
+
+    public static void setAutoDpos(Context context, boolean is){
         SharedPreferences prefs = context.getSharedPreferences(UiUtils.getCacheProviderName(context, PREFS_NAME), Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
         editor.putBoolean("autoVote", is);
         editor.apply();
     }
 
-    public static boolean getAutoVote(Context context){
+    public static boolean getAutoDpos(Context context){
         SharedPreferences prefs = context.getSharedPreferences(UiUtils.getCacheProviderName(context, PREFS_NAME), Context.MODE_PRIVATE);
         return prefs.getBoolean("autoVote", false);
     }
 
-    public static void cacheCandidate(Context context, String candidate){
+    public static void cacheCrcVotes(Context context, String votes) {
+        if(StringUtil.isNullOrEmpty(votes)) return;
+        SharedPreferences prefs = context.getSharedPreferences(UiUtils.getCacheProviderName(context, PREFS_NAME), Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString("crcVotes", votes);
+        editor.apply();
+    }
+
+    public static String getCrcVotes(Context context) {
+        SharedPreferences prefs = context.getSharedPreferences(UiUtils.getCacheProviderName(context, PREFS_NAME), Context.MODE_PRIVATE);
+        return prefs.getString("crcVotes", "");
+    }
+
+    public static void cacheCrcCd(Context context, String votes) {
+        if(StringUtil.isNullOrEmpty(votes)) return;
+        SharedPreferences prefs = context.getSharedPreferences(UiUtils.getCacheProviderName(context, PREFS_NAME), Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString("crcCandidate", votes);
+        editor.apply();
+    }
+
+    public static String getCrcCd(Context context) {
+        SharedPreferences prefs = context.getSharedPreferences(UiUtils.getCacheProviderName(context, PREFS_NAME), Context.MODE_PRIVATE);
+        return prefs.getString("crcCandidate", "");
+    }
+
+    public static void cacheDposCd(Context context, String candidate){
+        if(StringUtil.isNullOrEmpty(candidate)) return;
         SharedPreferences prefs = context.getSharedPreferences(UiUtils.getCacheProviderName(context, PREFS_NAME), Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
         editor.putString("candidate", candidate);
         editor.apply();
     }
 
-    public static String getCandidate(Context context){
+    public static String getDposCd(Context context){
         SharedPreferences prefs = context.getSharedPreferences(UiUtils.getCacheProviderName(context, PREFS_NAME), Context.MODE_PRIVATE);
         return prefs.getString("candidate", "");
     }
@@ -738,6 +789,18 @@ public class BRSharedPrefs {
     public static long getDid2ChainTime(Context context){
         SharedPreferences prefs = context.getSharedPreferences(UiUtils.getCacheProviderName(context, PREFS_NAME), Context.MODE_PRIVATE);
         return prefs.getLong("did2Chain", 0);
+    }
+
+    public static void cacheMyDid(Context context, String did) {
+        SharedPreferences prefs = context.getSharedPreferences(UiUtils.getCacheProviderName(context, PREFS_NAME), Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString("myDid", did);
+        editor.apply();
+    }
+
+    public static String getMyDid(Context context) {
+        SharedPreferences prefs = context.getSharedPreferences(UiUtils.getCacheProviderName(context, PREFS_NAME), Context.MODE_PRIVATE);
+        return prefs.getString("myDid", "");
     }
 
     public static void putRequestInfo(Context context, String value){
@@ -799,19 +862,7 @@ public class BRSharedPrefs {
 
     public static int getCurrentHistoryPageNumber(Context context){
         SharedPreferences prefs = context.getSharedPreferences(UiUtils.getCacheProviderName(context, PREFS_NAME), Context.MODE_PRIVATE);
-        return prefs.getInt("pageNumber", 1);
-    }
-
-    public static void putHistoryRange(Context context, int range){
-        SharedPreferences prefs = context.getSharedPreferences(UiUtils.getCacheProviderName(context, PREFS_NAME), Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putInt("range", range);
-        editor.apply();
-    }
-
-    public static int getHistoryRange(Context context){
-        SharedPreferences prefs = context.getSharedPreferences(UiUtils.getCacheProviderName(context, PREFS_NAME), Context.MODE_PRIVATE);
-        return prefs.getInt("range", 0);
+        return prefs.getInt("pageNumber", 0);
     }
 
     public static void putTotalPageNumber(Context context, int number){
@@ -843,6 +894,20 @@ public class BRSharedPrefs {
         return prefs.getBoolean("useFingerprint", false);
     }
 
+    public static void putVotemeDeleteStatue(Context context, boolean delete) {
+        SharedPreferences prefs = context.getSharedPreferences(UiUtils.getCacheProviderName(context, PREFS_NAME), Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putBoolean("isVotemeDelete", delete);
+        editor.apply();
+    }
+
+    public static void putMiniAppsDeleteStatue(Context context, boolean delete) {
+        SharedPreferences prefs = context.getSharedPreferences(UiUtils.getCacheProviderName(context, PREFS_NAME), Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putBoolean("isMiniAppsDelete", delete);
+        editor.apply();
+    }
+
     public static void putRedPacketDeleteStatue(Context context, boolean delete) {
         SharedPreferences prefs = context.getSharedPreferences(UiUtils.getCacheProviderName(context, PREFS_NAME), Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
@@ -869,6 +934,16 @@ public class BRSharedPrefs {
         SharedPreferences.Editor editor = prefs.edit();
         editor.putBoolean("isVoteDelete", delete);
         editor.apply();
+    }
+
+    public static boolean isVotemeDelete(Context context) {
+        SharedPreferences prefs = context.getSharedPreferences(UiUtils.getCacheProviderName(context, PREFS_NAME), Context.MODE_PRIVATE);
+        return prefs.getBoolean("isVotemeDelete", false);
+    }
+
+    public static boolean isMiniAppsDelete(Context context) {
+        SharedPreferences prefs = context.getSharedPreferences(UiUtils.getCacheProviderName(context, PREFS_NAME), Context.MODE_PRIVATE);
+        return prefs.getBoolean("isMiniAppsDelete", false);
     }
 
     public static boolean isRedPacketDelete(Context context) {
@@ -902,4 +977,41 @@ public class BRSharedPrefs {
         SharedPreferences prefs = context.getSharedPreferences(UiUtils.getCacheProviderName(context, PREFS_NAME), Context.MODE_PRIVATE);
         return prefs.getString("ethHost", "api-wallet-eth.elastos.org");
     }
+
+    public static void cacheCarrierId(Context context, String carrierId) {
+        SharedPreferences prefs = context.getSharedPreferences(UiUtils.getCacheProviderName(context, PREFS_NAME), Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString("carrierId", carrierId);
+        editor.apply();
+    }
+
+    public static String getCarrierId(Context context) {
+        SharedPreferences prefs = context.getSharedPreferences(UiUtils.getCacheProviderName(context, PREFS_NAME), Context.MODE_PRIVATE);
+        return prefs.getString("carrierId", "");
+    }
+
+    public static void hasCacheCity(Context context) {
+        SharedPreferences prefs = context.getSharedPreferences(UiUtils.getCacheProviderName(context, PREFS_NAME), Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putBoolean("hasCacheCity", true);
+        editor.apply();
+    }
+
+    public static boolean isCacheCity(Context context) {
+        SharedPreferences prefs = context.getSharedPreferences(UiUtils.getCacheProviderName(context, PREFS_NAME), Context.MODE_PRIVATE);
+        return prefs.getBoolean("hasCacheCity", false);
+    }
+
+    public static boolean needAddApps(Context context) {
+        SharedPreferences prefs = context.getSharedPreferences(UiUtils.getCacheProviderName(context, PREFS_NAME), Context.MODE_PRIVATE);
+        return prefs.getBoolean("needAddApps", false);
+    }
+
+    public static void putNeedAddApps(Context context, boolean need) {
+        SharedPreferences prefs = context.getSharedPreferences(UiUtils.getCacheProviderName(context, PREFS_NAME), Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putBoolean("needAddApps", need);
+        editor.apply();
+    }
+
 }

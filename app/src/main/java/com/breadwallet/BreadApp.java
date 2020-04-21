@@ -2,7 +2,6 @@ package com.breadwallet;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
-import android.app.Application;
 import android.arch.lifecycle.ProcessLifecycleOwner;
 import android.content.Context;
 import android.content.IntentFilter;
@@ -14,9 +13,7 @@ import android.net.ConnectivityManager;
 import android.os.Build;
 import android.util.Log;
 import android.view.Display;
-import android.view.View;
 import android.view.WindowManager;
-import android.widget.TextView;
 
 import com.breadwallet.cache.UpgradeHandler;
 import com.breadwallet.presenter.activities.util.ApplicationLifecycleObserver;
@@ -33,11 +30,10 @@ import com.breadwallet.tools.util.Utils;
 import com.platform.APIClient;
 import com.tencent.bugly.Bugly;
 import com.tencent.bugly.beta.Beta;
-import com.tencent.bugly.beta.UpgradeInfo;
-import com.tencent.bugly.beta.ui.UILifecycleListener;
+
+import org.common.lib.BaseApplication;
 
 import java.io.UnsupportedEncodingException;
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -74,7 +70,7 @@ import java.util.regex.Pattern;
  * THE SOFTWARE.
  */
 
-public class BreadApp extends Application {
+public class BreadApp extends BaseApplication {
     private static final String TAG = BreadApp.class.getName();
     public static int DISPLAY_HEIGHT_PX;
     public static int DISPLAY_WIDTH_PX;
@@ -114,16 +110,6 @@ public class BreadApp extends Application {
             HOST = "stage2.breadwallet.com";
         }
 
-//        CrashHandler crashHandler = CrashHandler.getInstance();
-//        crashHandler.init(this);
-//        Thread.setDefaultUncaughtExceptionHandler(crashHandler);
-
-//        final Fabric fabric = new Fabric.Builder(this)
-//                .kits(new Crashlytics.Builder().disabled(BuildConfig.DEBUG).build())
-//                .debuggable(BuildConfig.DEBUG)// Enables Crashlytics debugger
-//                .build();
-//        Fabric.with(fabric);
-
         mContext = this;
 
         if (!Utils.isEmulatorOrDebug(this) && IS_ALPHA)
@@ -133,10 +119,10 @@ public class BreadApp extends Application {
         boolean isTestNet = BuildConfig.BITCOIN_TESTNET;
         String lang = getCurrentLocale(this);
 
-        Log.i("buildConfig", "BITCOIN_TESTNET:"+BuildConfig.BITCOIN_TESTNET);
-        Log.i("buildConfig", "UPGRADE_TESTNET:"+BuildConfig.UPGRADE_TESTNET);
-        Log.i("buildConfig", "RED_PACKAGE_TEST:"+BuildConfig.RED_PACKAGE_TEST);
-        Log.i("buildConfig", "CAN_UPLOAD:"+BuildConfig.CAN_UPLOAD);
+        Log.d("buildConfig", "BITCOIN_TESTNET:"+BuildConfig.BITCOIN_TESTNET);
+        Log.d("buildConfig", "UPGRADE_TESTNET:"+BuildConfig.UPGRADE_TESTNET);
+        Log.d("buildConfig", "RED_PACKAGE_TEST:"+BuildConfig.RED_PACKAGE_TEST);
+        Log.d("buildConfig", "CAN_UPLOAD:"+BuildConfig.CAN_UPLOAD);
 
         mHeaders.put(BRApiManager.HEADER_IS_INTERNAL, IS_ALPHA ? "true" : "false");
         mHeaders.put(BRApiManager.HEADER_TESTFLIGHT, isTestVersion ? "true" : "false");
@@ -156,11 +142,16 @@ public class BreadApp extends Application {
         mObserver = new ApplicationLifecycleObserver();
         ProcessLifecycleOwner.get().getLifecycle().addObserver(mObserver);
 
+
+        CrashHandler.getInstance().init(getApplicationContext());
+
         Beta.upgradeDialogLayoutId = R.layout.upgrade_layout;
         UpgradeHandler.initString();
-        Bugly.init(getApplicationContext(), BuildConfig.UPGRADE_TESTNET? "8b437eefc0":"8a9b0190e0", false);
+        Bugly.init(getApplicationContext(), "8a9b0190e0", false);
         cacheVersionCode();
+//        PushClient.getInstance().initCloudChannel(this);
     }
+
 
     private void cacheVersionCode() {
         PackageInfo packageInfo = null;

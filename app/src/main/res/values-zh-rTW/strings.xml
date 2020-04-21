@@ -5,7 +5,7 @@
     <!-- About screen blog label -->
     <string name="About.blog">博客</string>
     <!-- About screen footer -->
-    <string name="About.footer">由 Elastos Application Lab 製作。版本 %1$s Build %2$s</string>
+    <string name="About.footer">由 Elaphant Team 製作。版本 %1$s Build %2$s</string>
     <!-- Privay Policy button label -->
     <string name="About.privacy">隱私政策</string>
     <!-- About screen reddit label -->
@@ -963,6 +963,7 @@
     <string name="upgrade_cancel">下次</string>
 
     <string name="Did.Will.Get">%1$s 將要獲取您的:</string>
+    <string name="MenuButton.moment">我的動態</string>
     <string name="MenuButton.authorizations">授權</string>
     <string name="Did.Authorized">已授權</string>
     <string name="Did.Authorize">授權</string>
@@ -1056,7 +1057,7 @@
     <string name="pin_author_vote_msg">請輸入PIN碼授權投票</string>
 
     <string name="loading_hint">請稍候....</string>
-    <string name="auto_vote_hint">自動使用ELA餘額投票</string>
+    <string name="auto_dpos_hint">自動使用ELA餘額投票</string>
     <string name="explore_vote_about_desc1">ELA投票</string>
     <string name="explore_vote_about_desc2">投票小程序允許你每次最多投給36個DPoS超級節點。</string>
     <string name="vote_balance_not_insufficient">ELA余額少于1</string>
@@ -1176,4 +1177,6 @@
     <string name="clear_cache_positive_btn">确定</string>
     <string name="clear_cache_negative_btn">取消</string>
     <string name="elapay_request_params_error">請求參數錯誤</string>
+
+
 </resources>

@@ -26,12 +26,13 @@ import com.breadwallet.tools.threads.executor.BRExecutor;
 import com.breadwallet.tools.util.BRConstants;
 import com.breadwallet.tools.util.StringUtil;
 import com.breadwallet.tools.util.Utils;
+import com.breadwallet.vote.PayLoadEntity;
 import com.breadwallet.vote.ProducerEntity;
 import com.breadwallet.wallet.wallets.ela.BRElaTransaction;
 import com.breadwallet.wallet.wallets.ela.ElaDataSource;
 import com.breadwallet.wallet.wallets.ela.WalletElaManager;
-import com.breadwallet.wallet.wallets.ela.data.TxProducerEntity;
-import com.breadwallet.wallet.wallets.ela.data.TxProducersEntity;
+import com.breadwallet.wallet.wallets.ela.data.DposProducer;
+import com.breadwallet.wallet.wallets.ela.data.DposProducers;
 import com.elastos.jni.AuthorizeManager;
 import com.elastos.jni.UriFactory;
 import com.google.gson.Gson;
@@ -161,6 +162,10 @@ public class VoteActivity extends BaseSettingsActivity {
     private void callReturnUrl(String txId){
         if(StringUtil.isNullOrEmpty(txId)) return;
         String returnUrl = uriFactory.getReturnUrl();
+        if(StringUtil.isNullOrEmpty(returnUrl)) {
+            Toast.makeText(VoteActivity.this, "returnurl is empty", Toast.LENGTH_SHORT).show();
+            return;
+        }
         String url;
         if (returnUrl.contains("?")) {
             url = returnUrl + "&TXID=" + txId;
@@ -194,8 +199,14 @@ public class VoteActivity extends BaseSettingsActivity {
                     public void run() {
                         Log.d("posvote", "mCandidatesStr:"+mCandidatesStr);
                         String address = WalletElaManager.getInstance(VoteActivity.this).getAddress();
-                        long amout = (null==mCandidates || mCandidates.size()<=0)? 100: 0L;
-                        List<BRElaTransaction> transactions = ElaDataSource.getInstance(VoteActivity.this).createElaTx(address, address, amout, "vote", mCandidates);
+                        long amout = 0L;
+                        List<PayLoadEntity> publickeys = new ArrayList<>();
+                        for(String candidate : mCandidates) {
+                            PayLoadEntity payLoadEntity = new PayLoadEntity();
+                            payLoadEntity.value = amout;
+                            payLoadEntity.candidate = candidate;
+                        }
+                        List<BRElaTransaction> transactions = ElaDataSource.getInstance(VoteActivity.this).createElaTx(address, address, amout, "vote", publickeys);
                         if(null == transactions) {
                             dismissDialog();
                             finish();
@@ -210,10 +221,10 @@ public class VoteActivity extends BaseSettingsActivity {
                         callBackUrl(mRwTxid);
                         callReturnUrl(mRwTxid);
                         if(null==mCandidates || mCandidates.size()<=0) {
-                            BRSharedPrefs.cacheCandidate(VoteActivity.this, "");
+                            BRSharedPrefs.cacheDposCd(VoteActivity.this, "");
 //                            ElaDataSource.getInstance(VoteActivity.this).deleteAllTxProducer();
                         } else {
-                            BRSharedPrefs.cacheCandidate(VoteActivity.this, mCandidatesStr);
+                            BRSharedPrefs.cacheDposCd(VoteActivity.this, mCandidatesStr);
 //                            cacheTxProducer(mRwTxid);
                         }
                         dismissDialog();
@@ -233,16 +244,16 @@ public class VoteActivity extends BaseSettingsActivity {
     private void cacheTxProducer(String txid){
         if(StringUtil.isNullOrEmpty(txid)) return;
         if(null==mProducers || mProducers.size()<=0) return;
-        List<TxProducersEntity> txProducersEntities = new ArrayList<>();
-        TxProducersEntity txProducersEntity = new TxProducersEntity();
-        txProducersEntity.Txid = txid;
-        txProducersEntity.Producer = new ArrayList<>();
+        List<DposProducers> txProducersEntities = new ArrayList<>();
+        DposProducers dposProducers = new DposProducers();
+        dposProducers.Txid = txid;
+        dposProducers.Producer = new ArrayList<>();
         for(ProducerEntity entity : mProducers){
-            TxProducerEntity txProducerEntity = new TxProducerEntity(entity.Producer_public_key, entity.Producer_public_key, entity.Nickname);
-            txProducersEntity.Producer.add(txProducerEntity);
+            DposProducer dposProducer = new DposProducer(entity.Producer_public_key, entity.Producer_public_key, entity.Nickname);
+            dposProducers.Producer.add(dposProducer);
         }
-        txProducersEntities.add(txProducersEntity);
-        ElaDataSource.getInstance(this).cacheMultiTxProducer(txProducersEntities);
+        txProducersEntities.add(dposProducers);
+        ElaDataSource.getInstance(this).cacheDposProducer(txProducersEntities);
     }
 
     private BigDecimal mAmount;
@@ -286,7 +297,7 @@ public class VoteActivity extends BaseSettingsActivity {
         mAmount = balance.subtract(new BigDecimal(0.0001));
         mVoteElaAmountTv.setText(mAmount.longValue()+"");
 
-        List<ProducerEntity> tmp = ElaDataSource.getInstance(VoteActivity.this).getProducersByPK(mCandidates);
+        List<ProducerEntity> tmp = ElaDataSource.getInstance(VoteActivity.this).queryDposProducers(mCandidates);
         if(tmp!=null && tmp.size()>0) {
             mProducers.clear();
             mProducers.addAll(tmp);

@@ -8,9 +8,11 @@ import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import com.breadwallet.BreadApp;
 import com.breadwallet.BuildConfig;
 import com.breadwallet.presenter.entities.BRTransactionEntity;
 import com.breadwallet.tools.animation.UiUtils;
+import com.breadwallet.tools.manager.BRSharedPrefs;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,7 +57,94 @@ public class BRSQLiteHelper extends SQLiteOpenHelper {
     }
 
     public static String DATABASE_NAME = "breadwallet.db";
-    private static final int DATABASE_VERSION = 21;
+    private static final int DATABASE_VERSION = 22;
+
+
+    public static final String CRC_CIRY_TABLE_NAME = "crcCityTable";
+    public static final String CRC_CITY_CODE = "code";
+    public static final String CRC_CITY_EN = "en";
+    public static final String CRC_CITY_ZH = "zh";
+
+    private static final String CRC_CITY_DATABASE_CREATE = "create table if not exists " + CRC_CIRY_TABLE_NAME + " (" +
+            CRC_CITY_CODE + " integer primary key , " +
+            CRC_CITY_EN + " text," +
+            CRC_CITY_ZH + " text" +
+            ");";
+
+    public static final String CRC_VOTE_TABLE_NAME = "crcVoteTable";
+    public static final String CRC_VOTE_DID = "did";
+    public static final String CRC_VOTE_RANK = "rank";
+    public static final String CRC_VOTE_NICKNAME = "nickname";
+    public static final String CRC_VOTE_LOCATION = "location";
+    public static final String CRC_VOTE_VOTES = "votes";
+    public static final String CRC_VOTE_VALUE = "value";
+
+    private static final String CRC_VOTE_DATABASE_CREATE = "create table if not exists " + CRC_VOTE_TABLE_NAME + " (" +
+            CRC_VOTE_DID + " text primary key , " +
+            CRC_VOTE_RANK + " integer, " +
+            CRC_VOTE_NICKNAME + " text," +
+            CRC_VOTE_LOCATION + " integer, " +
+            CRC_VOTE_VOTES + " text, " +
+            CRC_VOTE_VALUE + " text" +
+            ");";
+
+    public static final String WAIT_ACCEPT_TABLE_NAME = "waitAcceptTable";
+    public static final String WAIT_ACCEPT_NICKNAME = "waitAcceptNickname";
+    public static final String WAIT_ACCEPT_DID = "waitAcceptDid";
+    public static final String WAIT_ACCEPT_TIMESTAMP = "waitAcceptTimestamp";
+    public static final String WAIT_ACCEPT_STATUS = "waitAcceptStatus";
+    public static final String WAIT_ACCEPT_CAEEIERADDR = "waitAcceptCarrierAddr";
+
+    private static final String WAIT_ACCEPT_DATABASE_CREATE = "create table if not exists " + WAIT_ACCEPT_TABLE_NAME + " (" +
+            WAIT_ACCEPT_DID + " text primary key , " +
+            WAIT_ACCEPT_NICKNAME + " text," +
+            WAIT_ACCEPT_TIMESTAMP + " integer, " +
+            WAIT_ACCEPT_STATUS + " integer, " +
+            WAIT_ACCEPT_CAEEIERADDR + " text" +
+            ");";
+
+    public static final String CHAT_MESSAGE_ITEM_TABLE_NAME = "chatMessageItemTable";
+    public static final String CHAT_MESSAGE_ITEM_ID = "_id";
+    public static final String CHAT_MESSAGE_ITEM_FRIENDCODE = "chatMessageItemFriendCode";
+    public static final String CHAT_MESSAGE_ITEM_TYPE = "chatMessageItemType";
+    public static final String HCAT_MESSAGE_ITEM_TIMESTAMP = "chatMessageItemTimestamp";
+    private static final String CHAT_MESSAGE_ITEM_DATABASE_CREATE = "create table if not exists " + CHAT_MESSAGE_ITEM_TABLE_NAME + " (" +
+            CHAT_MESSAGE_ITEM_FRIENDCODE + " text primary key , " +
+            CHAT_MESSAGE_ITEM_TYPE + " text," +
+            HCAT_MESSAGE_ITEM_TIMESTAMP + " integer" +
+            ");";
+
+    public static final String CHAT_MESSAGE_TABLE_NAME = "chatMessageTable";
+    public static final String CHAT_MESSAGE_ID = "_id";
+    public static final String CHAT_MESSAGE_MANAGER = "chatMessageManager";
+    public static final String CHAT_MESSAGE_TYPE = "chatMessageType";
+    public static final String CHAT_MESSAGE_HUMANCODE = "chatMessageHumncode";
+    public static final String CHAT_MESSAGE_TIMESTAMP = "chatMessageTimestamp";
+    public static final String CHAT_MESSAGE_HAS_READ = "chatMessageHasRead";
+    public static final String CHAT_MESSAGE_CONTENT = "chatMessageContent";
+    public static final String CHAT_MESSAGE_CONTENT_TYPE = "chatMessageContentType";
+    public static final String CHAT_MESSAGE_NICKNAME = "chatMessageNickname";
+    public static final String CHAT_MESSAGE_ICON_PATH = "chatMessageIconPath";
+    public static final String CHAT_MESSAGE_ORIENTATION = "chatMessageOrientation";
+    public static final String CHAT_MESSAGE_FRIENDCODE = "chatMessageFriendCode";
+    public static final String CHAT_MESSAGE_FRIEND_ICON_PATH = "chatMessageFriendIconPath";
+    public static final String CHAT_MESSAGE_SEND_STATE = "chatMessageSendState";
+    private static final String CHAT_MESSAGE_DATABASE_CREATE = "create table if not exists " + CHAT_MESSAGE_TABLE_NAME + " (" +
+            CHAT_MESSAGE_MANAGER + " text, " +
+            CHAT_MESSAGE_TYPE + " text, " +
+            CHAT_MESSAGE_HUMANCODE + " text, " +
+            CHAT_MESSAGE_TIMESTAMP + " integer, " +
+            CHAT_MESSAGE_HAS_READ + " integer, " +
+            CHAT_MESSAGE_CONTENT + " text, " +
+            CHAT_MESSAGE_CONTENT_TYPE + " text, " +
+            CHAT_MESSAGE_NICKNAME + " text, " +
+            CHAT_MESSAGE_ICON_PATH + " text, " +
+            CHAT_MESSAGE_ORIENTATION + " integer, " +
+            CHAT_MESSAGE_FRIENDCODE + " text, " +
+            CHAT_MESSAGE_FRIEND_ICON_PATH + " text, " +
+            CHAT_MESSAGE_SEND_STATE + " integer, " +
+            "PRIMARY KEY (" + CHAT_MESSAGE_FRIENDCODE + ", " + CHAT_MESSAGE_TIMESTAMP + ")" +
+            ");";
 
     public static final String ADD_APPS_TABLE_NAME = "addAppTable";
     public static final String ADD_APPS_NAME = "name";
@@ -113,19 +202,51 @@ public class BRSQLiteHelper extends SQLiteOpenHelper {
             ESIGN_SIGNED_DATA + " text);";
 
     /**
-     * History Producer table
+     * crc history table
      */
-    public static final String HISTORY_PRODUCER_TABLE_NAME = "historyProducerTable";
-    public static final String HISTORY_PRODUCER_TXID = "txid";
-    public static final String HISTORY_PRODUCER_OWN_PUBLICKEY = "ownPublicKey";
-    public static final String HISTORY_PRODUCER_NOD_PUBLICKEY = "nodePublicKey";
-    public static final String HISTORY_PRODUCER_NICKNAME = "nickName";
-    private static final String HISTORY_PRODUCER_DATABASE_CREATE = "create table if not exists " + HISTORY_PRODUCER_TABLE_NAME + " (" +
-            HISTORY_PRODUCER_TXID + " text, " +
-            HISTORY_PRODUCER_OWN_PUBLICKEY + " text, " +
-            HISTORY_PRODUCER_NOD_PUBLICKEY + " text, " +
-            HISTORY_PRODUCER_NICKNAME +" text, " +
-            "PRIMARY KEY (" + HISTORY_PRODUCER_TXID + ", " + HISTORY_PRODUCER_OWN_PUBLICKEY + ")" +
+
+    public static final String CRC_HISTORY_TABLE_NAME = "crcHistoryTable";
+    public static final String CRC_HISTORY_TXID = "txid";
+    public static final String CRC_HISTORY_DID = "did";
+    public static final String CRC_HISTORY_VOTE = "vote";
+    private static final String CRC_HISTORY_DATABASE_CREATE = "create table if not exists " + CRC_HISTORY_TABLE_NAME + " (" +
+            CRC_HISTORY_TXID + " text, " +
+            CRC_HISTORY_DID + " text, " +
+            CRC_HISTORY_VOTE +" text, " +
+            "PRIMARY KEY (" + CRC_HISTORY_TXID + ", " + CRC_HISTORY_DID + ")" +
+            ");";
+
+    /**
+     * Crc Producer table
+     */
+    public static final String CRC_PRODUCER_TABLE_NAME = "crcProducerTable";
+    public static final String CRC_PRODUCER_TXID = "txid";
+    public static final String CRC_PRODUCER_DID = "did";
+    public static final String CRC_PRODUCER_LOCATION = "location";
+    public static final String CRC_PRODUCER_STATE = "state";
+    private static final String CRC_PRODUCER_DATABASE_CREATE = "create table if not exists " + CRC_PRODUCER_TABLE_NAME + " (" +
+            CRC_PRODUCER_TXID + " text, " +
+            CRC_PRODUCER_DID + " text, " +
+            CRC_PRODUCER_LOCATION + " integer, " +
+            CRC_PRODUCER_STATE +" text, " +
+            "PRIMARY KEY (" + CRC_PRODUCER_TXID + ", " + CRC_PRODUCER_DID + ")" +
+            ");";
+
+
+    /**
+     * Dpos Producer table
+     */
+    public static final String DPOS_PRODUCER_TABLE_NAME = "dposProducerTable";
+    public static final String DPOS_PRODUCER_TXID = "txid";
+    public static final String DPOS_PRODUCER_OWN_PUBLICKEY = "ownPublicKey";
+    public static final String DPOS_PRODUCER_NOD_PUBLICKEY = "nodePublicKey";
+    public static final String DPOS_PRODUCER_NICKNAME = "nickName";
+    private static final String DPOS_PRODUCER_DATABASE_CREATE = "create table if not exists " + DPOS_PRODUCER_TABLE_NAME + " (" +
+            DPOS_PRODUCER_TXID + " text, " +
+            DPOS_PRODUCER_OWN_PUBLICKEY + " text, " +
+            DPOS_PRODUCER_NOD_PUBLICKEY + " text, " +
+            DPOS_PRODUCER_NICKNAME +" text, " +
+            "PRIMARY KEY (" + DPOS_PRODUCER_TXID + ", " + DPOS_PRODUCER_OWN_PUBLICKEY + ")" +
             ");";
 
     /**
@@ -142,9 +263,9 @@ public class BRSQLiteHelper extends SQLiteOpenHelper {
 
     private static final String SIGN_DATABASE_CREATE = "create table if not exists " + SIGN_AUTHOR_TABLE_NAME + " (" +
             SIGN_APP_NAME + " text, " +
-            SIGN_APP_ID + " text, " +
+            SIGN_APP_ID + " text  primary key ,  " +
             SIGN_APP_ICON + " text, " +
-            SIGN_DID + " text primary key , " +
+            SIGN_DID + " text, " +
             SIGN_TIMESTAMP + " integer, " +
             SIGN_PURPOSE + " text, " +
             SIGN_CONTENT +" text);";
@@ -166,9 +287,9 @@ public class BRSQLiteHelper extends SQLiteOpenHelper {
     private static final String DID_AUTHOR_DATABASE_CREATE = "create table if not exists " + DID_AUTHOR_TABLE_NAME + " (" +
             DID_AUTHOR_COLUMN_ID + " integer, " +
             DID_AUTHOR_NICKNAME + " text, " +
-            DID_AUTHOR_DID + " text primary key , " +
+            DID_AUTHOR_DID + " text , " +
             DID_AUTHOR_PK + " text, " +
-            DID_AUTHOR_APP_ID + " text, " +
+            DID_AUTHOR_APP_ID + " text primary key , " +
             DID_AUTHOR_APP_NAME + " text, " +
             DID_AUTHOR_AUTHOR_TIME + " integer DEFAULT '0' , " +
             DID_AUTHOR_EXP_TIME + " integer DEFAULT '0' , " +
@@ -213,7 +334,6 @@ public class BRSQLiteHelper extends SQLiteOpenHelper {
     public static final String IOEX_COLUMN_AMOUNT ="amount";
     public static final String IOEX_COLUMN_MENO ="meno";
     public static final String IOEX_COLUMN_ISVALID ="isValid";
-    public static final String IOEX_COLUMN_ISVOTE ="isVote";
 
     private static final String IOEX_TX_DATABASE_CREATE = "create table if not exists " + IOEX_TX_TABLE_NAME + " (" +
             IOEX_COLUMN_ID + " integer, " +
@@ -229,8 +349,7 @@ public class BRSQLiteHelper extends SQLiteOpenHelper {
             IOEX_COLUMN_TXSIZE + " integer, " +
             IOEX_COLUMN_AMOUNT + " real, " +
             IOEX_COLUMN_MENO + " text, " +
-            IOEX_COLUMN_ISVALID + " interger, " +
-            IOEX_COLUMN_ISVOTE +" integer);";
+            IOEX_COLUMN_ISVALID +" integer);";
 
     /**
      * ELA transaction table
@@ -251,9 +370,10 @@ public class BRSQLiteHelper extends SQLiteOpenHelper {
     public static final String ELA_COLUMN_AMOUNT ="amount";
     public static final String ELA_COLUMN_MENO ="meno";
     public static final String ELA_COLUMN_ISVALID ="isValid";
-    public static final String ELA_COLUMN_ISVOTE ="isVote";
     public static final String ELA_COLUMN_PAGENUMBER = "pageNumber";
     public static final String ELA_COLUMN_STATUS = "status";
+    public static final String ELA_COLUMN_TPYE = "tpye";
+    public static final String ELA_COLUMN_TXTPYE = "txType";
 
     private static final String ELA_TX_DATABASE_CREATE = "create table if not exists " + ELA_TX_TABLE_NAME + " (" +
             ELA_COLUMN_ID + " integer, " +
@@ -270,8 +390,9 @@ public class BRSQLiteHelper extends SQLiteOpenHelper {
             ELA_COLUMN_AMOUNT + " real, " +
             ELA_COLUMN_MENO + " text, " +
             ELA_COLUMN_ISVALID + " interger, " +
-            ELA_COLUMN_ISVOTE + " interger, " +
             ELA_COLUMN_PAGENUMBER + " interger, " +
+            ELA_COLUMN_TPYE + " text, " +
+            ELA_COLUMN_TXTPYE + " text, " +
             ELA_COLUMN_STATUS +" text);";
 
     /**
@@ -355,11 +476,18 @@ public class BRSQLiteHelper extends SQLiteOpenHelper {
         Log.e(TAG, "onCreate: " + TX_DATABASE_CREATE);
         Log.e(TAG, "onCreate: " + PEER_DATABASE_CREATE);
         Log.e(TAG, "onCreate: " + CURRENCY_DATABASE_CREATE);
+        database.execSQL(CRC_CITY_DATABASE_CREATE);
+        database.execSQL(CRC_VOTE_DATABASE_CREATE);
+        database.execSQL(WAIT_ACCEPT_DATABASE_CREATE);
+        database.execSQL(CHAT_MESSAGE_ITEM_DATABASE_CREATE);
+        database.execSQL(CHAT_MESSAGE_DATABASE_CREATE);
         database.execSQL(ADD_APPS_DATABASE_CREATE);
         database.execSQL(ESIGN_HISTORY_DATABASE_CREATE);
         database.execSQL(IOEX_TX_DATABASE_CREATE);
 
-        database.execSQL(HISTORY_PRODUCER_DATABASE_CREATE);
+        database.execSQL(CRC_HISTORY_DATABASE_CREATE);
+        database.execSQL(CRC_PRODUCER_DATABASE_CREATE);
+        database.execSQL(DPOS_PRODUCER_DATABASE_CREATE);
         database.execSQL(ELA_PRODUCER_DATABASE_CREATE);
         database.execSQL(SIGN_DATABASE_CREATE);
         database.execSQL(DID_AUTHOR_DATABASE_CREATE);
@@ -379,12 +507,21 @@ public class BRSQLiteHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        if(oldVersion==20) {
+
+        if(newVersion==22) {
+            db.execSQL("DROP TABLE IF EXISTS " + SIGN_AUTHOR_TABLE_NAME);
+            db.execSQL("DROP TABLE IF EXISTS " + DID_AUTHOR_TABLE_NAME);
+            db.execSQL("DROP TABLE IF EXISTS " + ELA_TX_TABLE_NAME);
+            db.execSQL("DROP TABLE IF EXISTS " + IOEX_TX_TABLE_NAME);
+            BRSharedPrefs.putNeedAddApps(BreadApp.getBreadContext(), true);
+        }
+
+        if(newVersion==20) {
             db.execSQL("DROP TABLE IF EXISTS " + ADD_APPS_TABLE_NAME);
             db.execSQL("DROP TABLE IF EXISTS " + ELA_TX_TABLE_NAME);
         }
 
-        if(oldVersion == 18){
+        if(newVersion == 19){
             db.execSQL("DROP TABLE IF EXISTS " + ELA_TX_TABLE_NAME);
             db.execSQL(ELA_TX_DATABASE_CREATE);
             db.execSQL(ADD_APPS_DATABASE_CREATE);

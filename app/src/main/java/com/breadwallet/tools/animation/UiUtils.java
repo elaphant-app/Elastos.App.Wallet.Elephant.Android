@@ -45,6 +45,8 @@ import com.breadwallet.presenter.activities.VoteActivity;
 import com.breadwallet.presenter.activities.WalletActivity;
 import com.breadwallet.presenter.activities.WalletNameActivity;
 import com.breadwallet.presenter.activities.camera.ScanQRActivity;
+import com.breadwallet.presenter.activities.crc.CrcMembersActivity;
+import com.breadwallet.presenter.activities.crc.CrcVoteActivity;
 import com.breadwallet.presenter.activities.did.DidAuthorizeActivity;
 import com.breadwallet.presenter.activities.intro.IntroActivity;
 import com.breadwallet.presenter.activities.settings.WebViewActivity;
@@ -76,10 +78,18 @@ import com.breadwallet.tools.util.StringUtil;
 import com.breadwallet.tools.util.Utils;
 import com.breadwallet.wallet.abstracts.BaseWalletManager;
 import com.breadwallet.wallet.wallets.bitcoin.BaseBitcoinWalletManager;
-import com.breadwallet.wallet.wallets.ela.ElaDataSource;
 import com.elastos.jni.Constants;
 import com.google.gson.Gson;
+import com.platform.APIClient;
 import com.platform.sqlite.PlatformSqliteHelper;
+
+import org.chat.lib.presenter.ChatDetailActivity;
+import org.chat.lib.presenter.ChatGroupSelectActivity;
+import org.chat.lib.presenter.ChatScanActivity;
+import org.chat.lib.presenter.FriendProfileEditActivity;
+import org.chat.lib.presenter.GroupNameActivity;
+import org.chat.lib.presenter.MyQrActivity;
+import org.chat.lib.presenter.NewFriendListActivity;
 
 import java.io.File;
 import java.math.BigDecimal;
@@ -221,6 +231,11 @@ public class UiUtils {
         context.startActivity(intent);
     }
 
+    public static void startWaitAcceptActivity(Context context) {
+        Intent intent = new Intent(context, NewFriendListActivity.class);
+        context.startActivity(intent);
+    }
+
     public static void startMultiCreateActivity(Context context, Uri uri) {
         Intent intent = new Intent();
         intent.setClass(context, MultiSignCreateActivity.class);
@@ -230,6 +245,20 @@ public class UiUtils {
 
     public static void startVoteActivity(Context context, String url) {
         Intent intent = new Intent(context, VoteActivity.class);
+        intent.putExtra("vote_scheme_uri", url);
+        context.startActivity(intent);
+    }
+
+    public static void startCrcMembersActivity(Context context, String from, String candidates, String votes) {
+        Intent intent = new Intent(context, CrcMembersActivity.class);
+        intent.putExtra("from", from);
+        intent.putExtra("candidates", candidates);
+        intent.putExtra("votes", votes);
+        context.startActivity(intent);
+    }
+
+    public static void startCrcActivity(final Context context, String url) {
+        Intent intent = new Intent(context, CrcVoteActivity.class);
         intent.putExtra("vote_scheme_uri", url);
         context.startActivity(intent);
     }
@@ -485,6 +514,76 @@ public class UiUtils {
         activity.startActivityForResult(intent, requestCode);
     }
 
+    public static void startAddFriendActivity(Activity app, String type) {
+        try {
+            if (app == null) {
+                return;
+            }
+
+            // Check if the camera permission is granted
+            if (ContextCompat.checkSelfPermission(app,
+                    Manifest.permission.CAMERA)
+                    != PackageManager.PERMISSION_GRANTED) {
+                // Should we show an explanation?
+                if (ActivityCompat.shouldShowRequestPermissionRationale(app,
+                        Manifest.permission.CAMERA)) {
+                    BRDialog.showCustomDialog(app, app.getString(R.string.Send_cameraUnavailabeTitle_android),
+                            app.getString(R.string.Send_cameraUnavailabeMessage_android), app.getString(R.string.AccessibilityLabels_close), null, new BRDialogView.BROnClickListener() {
+                                @Override
+                                public void onClick(BRDialogView brDialogView) {
+                                    brDialogView.dismiss();
+                                }
+                            }, null, null, 0);
+                } else {
+                    // No explanation needed, we can request the permission.
+                    ActivityCompat.requestPermissions(app,
+                            new String[]{Manifest.permission.CAMERA},
+                            BRConstants.CHAT_CAMERA_REQUST_ID);
+                }
+            } else {
+
+                Intent intent = new Intent(app, ChatScanActivity.class);
+                intent.putExtra("type", type);
+                app.startActivityForResult(intent, BRConstants.SCANNER_REQUEST);
+                app.overridePendingTransition(R.anim.fade_up, R.anim.fade_down);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void startProfileEditActivity(Context context, String friendCode, String nickname) {
+        Intent intent = new Intent(context, FriendProfileEditActivity.class);
+        intent.putExtra("did", friendCode);
+        intent.putExtra("nickname", nickname);
+        context.startActivity(intent);
+    }
+
+    public static void startChatDetailActivity(Context context, String friendCode, String type, String chatName) {
+        Intent intent = new Intent(context, ChatDetailActivity.class);
+        intent.putExtra("did", friendCode);
+        intent.putExtra("type", type);
+        intent.putExtra("chatName", chatName);
+        context.startActivity(intent);
+    }
+
+    public static void startMyQrActivity(Context context) {
+        Intent intent = new Intent(context, MyQrActivity.class);
+        context.startActivity(intent);
+    }
+
+    public static void startGroupNameActivity(Context context, String friendCode) {
+        Intent intent = new Intent(context, GroupNameActivity.class);
+        intent.putExtra("did", friendCode);
+        context.startActivity(intent);
+    }
+
+    public static void startChatGroupSelectActivity(Activity activity, List<String> friendCodes) {
+        Intent intent = new Intent(activity, ChatGroupSelectActivity.class);
+        intent.putExtra("did", friendCodes.toString());
+        activity.startActivityForResult(intent, BRConstants.CHAT_GROUP_SELECT_FRIENDS);
+    }
+
     public static void startSignEditActivity(Activity activity, String from, String value, int requestCode) {
         Intent intent = new Intent(activity, SignaureEditActivity.class);
         intent.putExtra("from", from);
@@ -577,7 +676,7 @@ public class UiUtils {
             ElapayEntity elapayEntity = new ElapayEntity();
             elapayEntity.OrderID = WalletActivity.mOrderId;
             elapayEntity.TXID = txid;
-            ElaDataSource.getInstance(context).urlPost(WalletActivity.mCallbackUrl, new Gson().toJson(elapayEntity));
+            APIClient.urlPost(WalletActivity.mCallbackUrl, new Gson().toJson(elapayEntity));
         }
     }
 
@@ -608,7 +707,7 @@ public class UiUtils {
     }
 
     public static void shareCapsule(Context context, String url) {
-//        Uri contentUri = FileProvider.getUriForFile(context, "com.elastos.wallet.capsuleProvider", file);
+//        Uri contentUri = FileProvider.getUriForFile(context, "elaphant.app.capsuleProvider", file);
 //        if (contentUri == null) return;
 //        Intent shareIntent = new Intent();
 //        shareIntent.setAction(Intent.ACTION_SEND);

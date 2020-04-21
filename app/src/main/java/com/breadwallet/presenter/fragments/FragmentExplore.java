@@ -2,7 +2,7 @@ package com.breadwallet.presenter.fragments;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.Context;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -27,7 +27,7 @@ import com.breadwallet.presenter.customviews.BaseTextView;
 import com.breadwallet.presenter.customviews.LoadingDialog;
 import com.breadwallet.presenter.entities.MyAppItem;
 import com.breadwallet.presenter.entities.StringChainData;
-import com.breadwallet.tools.adapter.ExploreAppsAdapter;
+import com.breadwallet.tools.adapter.MiniAppsAdapter;
 import com.breadwallet.tools.animation.ItemTouchHelperAdapter;
 import com.breadwallet.tools.animation.SimpleItemTouchHelperCallback;
 import com.breadwallet.tools.animation.UiUtils;
@@ -41,10 +41,11 @@ import com.breadwallet.tools.util.BRConstants;
 import com.breadwallet.tools.util.FileHelper;
 import com.breadwallet.tools.util.StringUtil;
 import com.elastos.jni.Utility;
-import com.elastos.jni.utils.StringUtils;
+import com.elastos.jni.utils.SchemeStringUtils;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import org.eclipse.jetty.util.UrlEncoded;
 import org.elastos.sdk.wallet.BlockChainNode;
 import org.elastos.sdk.wallet.Did;
 import org.elastos.sdk.wallet.DidManager;
@@ -55,7 +56,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -67,10 +67,10 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class FragmentExplore extends Fragment implements OnStartDragListener, ExploreAppsAdapter.OnDeleteClickListener,
-        ExploreAppsAdapter.OnTouchMoveListener,
-        ExploreAppsAdapter.OnAboutClickListener,
-        ExploreAppsAdapter.OnItemClickListener {
+public class FragmentExplore extends Fragment implements OnStartDragListener, MiniAppsAdapter.OnDeleteClickListener,
+        MiniAppsAdapter.OnTouchMoveListener,
+        MiniAppsAdapter.OnAboutClickListener,
+        MiniAppsAdapter.OnItemClickListener {
 
     private static final String TAG = FragmentExplore.class.getSimpleName() + "_log";
 
@@ -86,7 +86,7 @@ public class FragmentExplore extends Fragment implements OnStartDragListener, Ex
     }
 
     private RecyclerView mMyAppsRv;
-    private ExploreAppsAdapter mAdapter;
+    private MiniAppsAdapter mAdapter;
     private View mDisclaimLayout;
     private View mMenuPopLayout;
     private ItemTouchHelper mItemTouchHelper;
@@ -188,11 +188,6 @@ public class FragmentExplore extends Fragment implements OnStartDragListener, Ex
         return rootView;
     }
 
-    public static class UserAppInfo {
-        public String appId;
-        public String url;
-    }
-
     private List<String> mAppIds = new ArrayList<>();
 
     private void initView(View rootView) {
@@ -233,22 +228,68 @@ public class FragmentExplore extends Fragment implements OnStartDragListener, Ex
 //            String[] apps = assetManager.list("apps");
             BRSharedPrefs.putAddedAppId(getContext(), new Gson().toJson(mAppIds));
             final List<MyAppItem> tmp = ProfileDataSource.getInstance(getContext()).getMyAppItems();
-            if (tmp != null && tmp.size() > 0) {
+            if (tmp != null && tmp.size()>0) {
                 mItems.addAll(tmp);
                 for (MyAppItem item : tmp) {
                     mAppIds.add(item.appId);
                     BRSharedPrefs.putAddedAppId(getContext(), new Gson().toJson(mAppIds));
                 }
                 mAdapter.notifyDataSetChanged();
-            }
-            BRExecutor.getInstance().forLightWeightBackgroundTasks().execute(new Runnable() {
-                @Override
-                public void run() {
-                    getInterApps(tmp);
+
+                boolean need = BRSharedPrefs.needAddApps(getContext());
+                if(need) {
+                    BRExecutor.getInstance().forLightWeightBackgroundTasks().execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                addVotemeApp();
+                                addMiniAppsApp();
+                                BRSharedPrefs.putNeedAddApps(getContext(), false);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            } finally {
+                                dialogDismiss();
+                            }
+                        }
+                    });
                 }
-            });
+            } else {
+                BRExecutor.getInstance().forLightWeightBackgroundTasks().execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        getInterApps(tmp);
+                    }
+                });
+            }
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+
+    private void addVotemeApp() {
+        showDialog();
+        StringChainData votemeStatus = getAppStatus(BRConstants.VOTE_ME_ID);
+        if (null == votemeStatus ||
+                StringUtil.isNullOrEmpty(votemeStatus.value) ||
+                votemeStatus.value.equals("normal")) {
+            mDoloadFileName = "voteforme.capsule";
+            mDoloadUrl = "https://voteforme.elaphant.net/voteforme.capsule ";
+            MiniAppHelper.copyCapsuleToDownloadCache(getContext(), mDownloadDir.getAbsolutePath(), mDoloadFileName);
+            refreshApps();
+        }
+    }
+
+    private void addMiniAppsApp() {
+        showDialog();
+        StringChainData miniAppStatus = getAppStatus(BRConstants.MINI_APPS_ID);
+        if (null == miniAppStatus ||
+                StringUtil.isNullOrEmpty(miniAppStatus.value) ||
+                miniAppStatus.value.equals("normal")) {
+            mDoloadFileName = "miniapps.capsule";
+            mDoloadUrl = "https://miniapps.elaphant.app/miniapps.capsule";
+            MiniAppHelper.copyCapsuleToDownloadCache(getContext(), mDownloadDir.getAbsolutePath(), mDoloadFileName);
+            refreshApps();
         }
     }
 
@@ -261,7 +302,7 @@ public class FragmentExplore extends Fragment implements OnStartDragListener, Ex
             Log.d(TAG, "copy redpackage");
             mDoloadFileName = "redpacket.capsule";
             mDoloadUrl = "https://redpacket.elastos.org/redpacket.capsule";
-            copyCapsuleToDownloadCache(getContext(), mDownloadDir.getAbsolutePath(), mDoloadFileName);
+            MiniAppHelper.copyCapsuleToDownloadCache(getContext(), mDownloadDir.getAbsolutePath(), mDoloadFileName);
             refreshApps();
         }
     }
@@ -275,7 +316,7 @@ public class FragmentExplore extends Fragment implements OnStartDragListener, Ex
             Log.d(TAG, "copy dposvote");
             mDoloadFileName = "vote.capsule";
             mDoloadUrl = "https://dposvote.elaphant.app/vote.capsule";
-            copyCapsuleToDownloadCache(getContext(), mDownloadDir.getAbsolutePath(), mDoloadFileName);
+            MiniAppHelper.copyCapsuleToDownloadCache(getContext(), mDownloadDir.getAbsolutePath(), mDoloadFileName);
             refreshApps();
         }
     }
@@ -289,7 +330,7 @@ public class FragmentExplore extends Fragment implements OnStartDragListener, Ex
             Log.d(TAG, "copy elaNews");
             mDoloadFileName = "ELANews01.capsule";
             mDoloadUrl = "https://elanews.net/ELANews01.capsule";
-            copyCapsuleToDownloadCache(getContext(), mDownloadDir.getAbsolutePath(), mDoloadFileName);
+            MiniAppHelper.copyCapsuleToDownloadCache(getContext(), mDownloadDir.getAbsolutePath(), mDoloadFileName);
             refreshApps();
         }
     }
@@ -303,30 +344,39 @@ public class FragmentExplore extends Fragment implements OnStartDragListener, Ex
             Log.d(TAG, "copy elaApps");
             mDoloadFileName = "elapp.capsule";
             mDoloadUrl = "https://elaphant.app/elapp.capsule";
-            copyCapsuleToDownloadCache(getContext(), mDownloadDir.getAbsolutePath(), mDoloadFileName);
+            MiniAppHelper.copyCapsuleToDownloadCache(getContext(), mDownloadDir.getAbsolutePath(), mDoloadFileName);
             refreshApps();
         }
     }
 
     private synchronized void getInterApps(List<MyAppItem> apps) {
         try {
-
+            boolean hasVotemeApps = false;
+            boolean hasMiniApps = false;
             boolean hasRedPackage = false;
             boolean hasDposVote = false;
             boolean hasElaNews = false;
             boolean hasElapp = false;
 
             for (MyAppItem item : apps) {
+                if(item.appId.equals(BRConstants.VOTE_ME_ID)) hasVotemeApps = true;
+                if(item.appId.equals(BRConstants.MINI_APPS_ID)) hasMiniApps = true;
                 if (item.appId.equals(BRConstants.REA_PACKAGE_ID)) hasRedPackage = true;
                 if (item.appId.equals(BRConstants.DPOS_VOTE_ID)) hasDposVote = true;
                 if (item.appId.equals(BRConstants.ELA_NEWS_ID)) hasElaNews = true;
                 if (item.appId.equals(BRConstants.ELA_APPS_ID)) hasElapp = true;
             }
 
+            boolean isVotemeAppDelete = BRSharedPrefs.isVotemeDelete(getContext());
+            boolean isMiniAppDelete = BRSharedPrefs.isMiniAppsDelete(getContext());
             boolean isRedPackageDelete = BRSharedPrefs.isRedPacketDelete(getContext());
             boolean isDposVoteDelete = BRSharedPrefs.isVoteDelete(getContext());
             boolean isElaNewsDelete = BRSharedPrefs.isElaNewsDelete(getContext());
             boolean isElappDelete = BRSharedPrefs.isElappDelete(getContext());
+
+            if(!hasVotemeApps && !isVotemeAppDelete) addVotemeApp();
+
+            if(!hasMiniApps && !isMiniAppDelete) addMiniAppsApp();
 
             if (!hasRedPackage && !isRedPackageDelete) addRedPackageApp();
 
@@ -356,7 +406,7 @@ public class FragmentExplore extends Fragment implements OnStartDragListener, Ex
 
     private void initAdapter() {
         mMyAppsRv.setLayoutManager(new LinearLayoutManager(getContext()));
-        mAdapter = new ExploreAppsAdapter(getContext(), mItems);
+        mAdapter = new MiniAppsAdapter(getContext(), mItems);
         mAdapter.isDelete(false);
         mMyAppsRv.setAdapter(mAdapter);
 
@@ -534,7 +584,28 @@ public class FragmentExplore extends Fragment implements OnStartDragListener, Ex
                 mAboutPopLayout.setVisibility(View.GONE);
                 if (null != mAboutShowListener) mAboutShowListener.show();
                 if (null != mAboutAppItem) {
-                    UiUtils.shareCapsule(getContext(), mAboutAppItem.path);
+                    StringBuilder sb = new StringBuilder();
+
+                    String languageCode = Locale.getDefault().getLanguage();
+                    if(!StringUtil.isNullOrEmpty(languageCode) && languageCode.contains("zh")){
+                        sb.append(mAboutAppItem.name_zh_CN);
+                    } else {
+                        sb.append(mAboutAppItem.name_en);
+                    }
+                    sb.append(" ");
+                    sb.append("https://launch.elaphant.app/?");
+                    if(!StringUtil.isNullOrEmpty(languageCode) && languageCode.contains("zh")){
+                        sb.append("appName=").append(Uri.encode(mAboutAppItem.name_zh_CN)).append("&");
+                        sb.append("appTitle=").append(Uri.encode(mAboutAppItem.name_zh_CN)).append("&");
+                    } else {
+                        sb.append("appName=").append(Uri.encode(mAboutAppItem.name_en)).append("&");
+                        sb.append("appTitle=").append(Uri.encode(mAboutAppItem.name_en)).append("&");
+                    }
+                    sb.append("autoRedirect=").append("True").append("&");
+                    sb.append("redirectURL=").append(Uri.encode(mAboutAppItem.path.trim().
+                            replace("http:", "elaphant:")
+                            .replace("https:", "elaphant:")));
+                    UiUtils.shareCapsule(getContext(), sb.toString());
                 }
             }
         });
@@ -598,38 +669,7 @@ public class FragmentExplore extends Fragment implements OnStartDragListener, Ex
     private String mDoloadFileName;
     private String mDoloadUrl;
 
-    private void copyCapsuleToDownloadCache(Context context, String fileOutputPath, String capsuleName) {
-        if (StringUtil.isNullOrEmpty(fileOutputPath) || StringUtil.isNullOrEmpty(capsuleName))
-            return;
 
-        InputStream inputStream = null;
-        OutputStream outputStream = null;
-        try {
-            if (!new File(fileOutputPath).exists()) new File(fileOutputPath).mkdirs();
-            File capsuleFile = new File(fileOutputPath, capsuleName);
-            if (capsuleFile.exists()) {
-                capsuleFile.delete();
-            }
-            outputStream = new FileOutputStream(capsuleFile);
-            inputStream = context.getAssets().open("apps/" + capsuleName);
-            byte[] buffer = new byte[1024];
-            int length = inputStream.read(buffer);
-            while (length > 0) {
-                outputStream.write(buffer, 0, length);
-                length = inputStream.read(buffer);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                outputStream.flush();
-                inputStream.close();
-                outputStream.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
 
     private File mDownloadDir = null;
     private File mDownloadCacheDir = null;
@@ -668,13 +708,21 @@ public class FragmentExplore extends Fragment implements OnStartDragListener, Ex
             }
         }
 
-        if (StringUtils.isElaphantCapsule(url)) {
-            downloadCapsule(StringUtils.replaceElsProtocol(url, "http"));
-            downloadCapsule(StringUtils.replaceElsProtocol(url, "https"));
+        if (SchemeStringUtils.isElaphantPrefix(url)) {
+            downloadCapsule(SchemeStringUtils.replaceElsProtocol(url, "http"));
+            downloadCapsule(SchemeStringUtils.replaceElsProtocol(url, "https"));
             return;
         }
 
-        boolean isValid = StringUtils.isHttpCapsule(url);
+        //open url if exit
+        for(MyAppItem item : mItems) {
+            if(url.trim().equals(item.path)) {
+                UiUtils.startWebviewActivity(getActivity(), item.url, item.appId);
+                return;
+            }
+        }
+
+        boolean isValid = SchemeStringUtils.isHttpPrefix(url);
         if (!isValid) {
             if(isAdded())Toast.makeText(getContext(), getString(R.string.mini_app_invalid_url), Toast.LENGTH_SHORT).show();
             return;
@@ -857,6 +905,12 @@ public class FragmentExplore extends Fragment implements OnStartDragListener, Ex
         if (StringUtil.isNullOrEmpty(mDidStr) || StringUtil.isNullOrEmpty(miniAppId)) return;
 
         switch (miniAppId) {
+            case BRConstants.VOTE_ME_ID:
+                BRSharedPrefs.putVotemeDeleteStatue(getContext(), StringUtil.isNullOrEmpty(status) || status.equals("deleted"));
+                break;
+            case BRConstants.MINI_APPS_ID:
+                BRSharedPrefs.putMiniAppsDeleteStatue(getContext(), StringUtil.isNullOrEmpty(status) || status.equals("deleted"));
+                break;
             case BRConstants.REA_PACKAGE_ID:
                 BRSharedPrefs.putRedPacketDeleteStatue(getContext(), StringUtil.isNullOrEmpty(status) || status.equals("deleted"));
                 break;

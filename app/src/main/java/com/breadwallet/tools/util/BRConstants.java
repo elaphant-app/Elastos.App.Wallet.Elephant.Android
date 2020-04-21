@@ -40,6 +40,7 @@ public final class BRConstants {
     public static final int CAMERA_REQUEST_ID = 34;
     public static final int GEO_REQUEST_ID = 35;
     public static final int CAMERA_REQUEST_GLIDERA_ID = 36;
+    public static final int CHAT_CAMERA_REQUST_ID = 37;
 
     /**
      * Request codes for auth
@@ -57,6 +58,7 @@ public final class BRConstants {
     public static final int SIGN_CONTENT_REQUEST = 122;
     public static final int GET_PHRASE_LIST_REQUEST_CODE = 123;
     public static final int INIT_GLOBAL_REQUEST_CODE = 124;
+    public static final int CHAT_GROUP_SELECT_FRIENDS = 125;
 
     /**
      * Request codes for take picture
@@ -137,11 +139,12 @@ public final class BRConstants {
      */
 
     public static final String URL_PRIVACY_POLICY = "https://elaphant.app/privacy-policy/";
-    public static final String URL_TWITTER = "https://twitter.com/breadapp";
+    public static final String URL_TWITTER = "https://twitter.com/ElaphantTeam";
     public static final String URL_REDDIT = "https://reddit.com/r/breadwallet/";
     public static final String URL_BLOG  = "http://t.me/elastoswalletelephant";
 
-
+    public static final String VOTE_ME_ID = "3461ba97b110118ed25a66697e021004e3de05a52c05bb10470619d73d3932a59c59e81a6f6621f22dfc9b0182df5891d13bd2afcb86cb8665d02e608f03b3cf";
+    public static final String MINI_APPS_ID = "ac89a6a3ff8165411c8426529dccde5cd44d5041407bf249b57ae99a6bfeadd60f74409bd5a3d81979805806606dd2d55f6979ca467982583ac734cf6f55a290";
     public static final String DPOS_VOTE_ID = "552453550a0ad3ad6cedd21a7bd47d2a3049ebb17099e892d92b93f9bd72bdeed9a439806118358422f3cb957a1ddebdc768ff667c2bd7359063d79d1618bf9c";
     public static final String REA_PACKAGE_ID = "8FD01FF48C37DC11B53DF6E4BDB07924A3BF7034AEC2E0CC0CCDAC253F1AD006492F0E809E1274C1F20A819E438C8A4FDA99CD34A9E4B210337D6F26203A7B9D";
     public static final String ELA_NEWS_ID = "7277effb64cd41460829a4d1262884e1c4049dc2aaf2c091160385ccabbf6b31028988dcebd5995a34207964d859f4e5718111afcc1ab13c6e07f073931e0d93";
@@ -160,6 +163,13 @@ public final class BRConstants {
 
     public static final String ELA_ASSET_ID = "a3d0eaa466df74983b5d7c543de6904f4c9418ead5ffd6d25814234a96db37b0";
     public static final String IOEX_ASSET_ID = "61ccbfae9f8ce9660a71321041917139cb72cbb85bd105e92f0ed32cb1d1298f";
+
+    public static final String CHAT_SINGLE_TYPE = "chatSingleType";
+    public static final String CHAT_GROUP_TYPE = "chatGroupType";
+
+    public static final int REQUEST_ACCEPT = 0;
+    public static final int RECEIVE_ACCEPT = 1;
+    public static final int ACCEPTED = 2;
 
     private BRConstants() {
     }

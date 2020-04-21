@@ -104,7 +104,6 @@ public class TxManager {
             @Override
             public void onRefresh() {
                 BRSharedPrefs.putCurrentHistoryPageNumber(app, 1);
-                BRSharedPrefs.putHistoryRange(app, 0);
                 BRExecutor.getInstance().forLightWeightBackgroundTasks().execute(new Runnable() {
                     @Override
                     public void run() {
@@ -123,7 +122,6 @@ public class TxManager {
 
     private void loadMoreData(final WalletActivity app){
         adapter.setLoadState(TransactionListAdapter.LOADING);
-        BRSharedPrefs.putHistoryRange(app, 1);
         BRExecutor.getInstance().forLightWeightBackgroundTasks().execute(new Runnable() {
             @Override
             public void run() {
@@ -188,7 +186,7 @@ public class TxManager {
         /**
          * Disable predictive animations. There is a bug in RecyclerView which causes views that
          * are being reloaded to pull invalid ViewHolders from the internal recycler stack if the
-         * adapter size has decreased since the ViewHolder was recycled.
+         * adapter size has decreased since the NormalViewHolder was recycled.
          */
         @Override
         public boolean supportsPredictiveItemAnimations() {

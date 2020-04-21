@@ -110,8 +110,9 @@ public class JsonRpcHelper {
 
     public static String createLogsUrl(String address, String contract, String event) {
 
-        return PROTOCOL + "://" + BreadApp.HOST + BRD_ETH_TX_ENDPOINT + "query?"
-                + "module=logs&action=getLogs"
+        //https://api-eth.elaphant.app/api/1/eth/getLogs?fromBlock=0&toBlock=latest&topic0=0xdac17f958d2ee523a2206206994597c13d831ec7&topic1=0x0000000000000000000000003D411b1632bFeC70d2aA83D1296849fF73246e75&topic1_2_opr=or&topic2=0x0000000000000000000000003D411b1632bFeC70d2aA83D1296849fF73246e75
+
+        return "https://api-eth.elaphant.app/api/1/eth/getLogs?"
                 + "&fromBlock=0&toBlock=latest"
                 + (null == contract ? "" : ("&address=" + contract))
                 + "&topic0=" + event
@@ -156,25 +157,34 @@ public class JsonRpcHelper {
     }
 
     @WorkerThread
-    public static void makeRpcRequest2(Context app, String url, JSONObject payload, JsonRpcRequestListener listener) {
-//        final MediaType JSON
-//                = MediaType.parse("application/json; charset=utf-8");
-//
-//        RequestBody requestBody = RequestBody.create(JSON, payload.toString());
-//
-//        Request request = new Request.Builder()
-//                .url(url)
-//                .header("Content-Type", "application/json; charset=utf-8")
-//                .header("Accept", "application/json")
-//                .post(requestBody).build();
-//
-//
-//        APIClient.BRResponse resp = APIClient.getInstance(app).sendRequest(request, true);
-//        String responseString = resp.getBodyText();
-//
-//        if (listener != null) {
-//            listener.onRpcRequestCompleted(responseString);
-//        }
+    public static void makeRpcRequest(Context app, String url, JsonRpcRequestListener listener) {
+
+        //https://api-eth.elaphant.app/api/1/eth/getLogs?fromBlock=0
+        // &toBlock=latest
+        // &topic0=0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef
+        // &topic1=0x000000000000000000000000544976511F2B6237b0b4Fe8fbd271B08164dD1b6
+        // &topic1_2_opr=or
+        // &topic2=0x000000000000000000000000544976511F2B6237b0b4Fe8fbd271B08164dD1b6
+
+        //https://api-eth.elaphant.app/api/1/eth/getLogs?fromBlock=0
+        // &toBlock=latest
+        // &topic0=0xdac17f958d2ee523a2206206994597c13d831ec7
+        // &topic1=0x000000000000000000000000544976511F2B6237b0b4Fe8fbd271B08164dD1b6
+        // &topic1_2_opr=or
+        // &topic2=0x000000000000000000000000544976511F2B6237b0b4Fe8fbd271B08164dD1b6
+        Request request = new Request.Builder()
+                .url(url)
+                .header("Content-Type", "application/json; charset=utf-8")
+                .header("Accept", "application/json")
+                .build();
+
+
+        APIClient.BRResponse resp = APIClient.getInstance(app).sendRequest(request, true);
+        String responseString = resp.getBodyText();
+
+        if (listener != null) {
+            listener.onRpcRequestCompleted(responseString);
+        }
 
 //        try {
 //            String responseString = urlPost(url, payload.toString());
@@ -185,16 +195,17 @@ public class JsonRpcHelper {
 //            e.printStackTrace();
 //        }
 
-        try {
-            String tmp = urlGET(app, "https://api-eth.elaphant.app/api/1/eth/token/balance?address=0x289B44672d8499A51130d65d2087A151c4e45966&contractaddress=0xa8cac329f783edac931815c5466e283d48c9d7f7");
-            Log.d("test", "test");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+//        try {
+//            String tmp = urlGET(app, "https://api-eth.elaphant.app/api/1/eth/token/balance?address=0x289B44672d8499A51130d65d2087A151c4e45966&contractaddress=0xa8cac329f783edac931815c5466e283d48c9d7f7");
+//            Log.d("test", "test");
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
     }
 
+    //TODO test
     @WorkerThread
-    public static void makeRpcRequest3(Context app, String url, JSONObject payload, JsonRpcRequestListener listener) {
+    public static void makeRpcRequest2(Context app, String url, JSONObject payload, JsonRpcRequestListener listener) {
         final MediaType JSON
                 = MediaType.parse("application/json; charset=utf-8");
 
@@ -214,7 +225,23 @@ public class JsonRpcHelper {
             listener.onRpcRequestCompleted(responseString);
         }
 
+//        try {
+//            String responseString = urlPost(url, payload.toString());
+//            if (listener != null) {
+//                listener.onRpcRequestCompleted(responseString);
+//            }
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+
+//        try {
+//            String tmp = urlGET(app, "https://api-eth.elaphant.app/api/1/eth/token/balance?address=0x289B44672d8499A51130d65d2087A151c4e45966&contractaddress=0xa8cac329f783edac931815c5466e283d48c9d7f7");
+//            Log.d("test", "test");
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
     }
+
 
     public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     public static String urlPost(String url, String json) throws IOException {
