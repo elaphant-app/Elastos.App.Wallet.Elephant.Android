@@ -64,17 +64,26 @@ import com.breadwallet.vote.ProducerEntity;
 import com.breadwallet.wallet.WalletsMaster;
 import com.breadwallet.wallet.abstracts.BaseWalletManager;
 import com.breadwallet.wallet.util.CryptoUriParser;
+import com.breadwallet.wallet.wallets.bitcoin.BaseBitcoinWalletManager;
 import com.breadwallet.wallet.wallets.ela.ElaDataSource;
 import com.breadwallet.wallet.wallets.ela.WalletElaManager;
 import com.breadwallet.wallet.wallets.ethereum.WalletEthManager;
+import com.breadwallet.wallet.wallets.ethereum.WalletTokenManager;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 import static com.breadwallet.wallet.util.CryptoUriParser.parseRequest;
 import static com.platform.HTTPServer.URL_SUPPORT;
@@ -144,6 +153,8 @@ public class FragmentSend extends ModalDialogFragment implements BRKeyboard.OnIn
     private CheckBox mAutoCrcCb;
     private TextView mViewAllTv;
     private FlowLayout mFlowLayout;
+
+    private Call mCall = null;
 
     public static boolean mFromElapay = false;
     public static boolean mIsSend = false;
@@ -757,6 +768,9 @@ public class FragmentSend extends ModalDialogFragment implements BRKeyboard.OnIn
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
                 showKeyboard(!hasFocus);
+                if (!hasFocus) {
+                    getAddressFromNickname();
+                }
             }
         });
 
@@ -788,6 +802,59 @@ public class FragmentSend extends ModalDialogFragment implements BRKeyboard.OnIn
                 String candidates = BRSharedPrefs.getCrcCd(getContext());
                 String votes = BRSharedPrefs.getCrcVotes(getContext());
                 UiUtils.startCrcMembersActivity(getContext(), "FragmentSend", candidates, votes);
+            }
+        });
+    }
+
+    private void getAddressFromNickname() {
+        final Activity app = getActivity();
+        String iso = WalletsMaster.getInstance(app).getCurrentWallet(app).getIso();
+        final String nickname = mAddressEdit.getEditableText().toString();
+        if (nickname.length() > 32 || nickname.isEmpty()) return;
+
+        String url = "https://" + nickname + ".elastos.name/";
+        if (iso.equalsIgnoreCase(BaseBitcoinWalletManager.BITCOIN_SYMBOL)) {
+            url += "btc.address";
+        } else if (iso.equalsIgnoreCase("ETH")
+                || iso.equalsIgnoreCase("ELAETHSC")
+                || iso.equalsIgnoreCase("USDT")) {
+            url += "eth.address";
+        } else if (iso.equalsIgnoreCase("ELA")) {
+            url += "ela.address";
+        } else {
+            return;
+        }
+        Log.d(TAG, "getAddressFromNickname url: " + url);
+
+        if (mCall != null) {
+            mCall.cancel();
+            mCall = null;
+        }
+
+        OkHttpClient okHttpClient = new OkHttpClient();
+        Request request = new Request.Builder().url(url).build();
+        mCall = okHttpClient.newCall(request);
+        mCall.enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Log.e(TAG, "get address from " + nickname + " error: " + e);
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                mCall = null;
+                if (response.code() != 200) {
+                    Log.e(TAG, call.request().url() + " response code: " + response.code());
+                    return;
+                }
+                final String address = response.body().string();
+                app.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Log.d(TAG, "get address from " + nickname + " address is " + address);
+                        mAddressEdit.setText(address);
+                    }
+                });
             }
         });
     }
@@ -976,6 +1043,17 @@ public class FragmentSend extends ModalDialogFragment implements BRKeyboard.OnIn
             WalletActivity.mCallbackUrl = null;
             WalletActivity.mOrderId = null;
         }
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (mCall != null) {
+            mCall.cancel();
+            mCall = null;
+            Log.d(TAG, "cancel call");
+        }
+        mAddressEdit.setOnFocusChangeListener(null);
     }
 
     private void handleClick(String key) {
