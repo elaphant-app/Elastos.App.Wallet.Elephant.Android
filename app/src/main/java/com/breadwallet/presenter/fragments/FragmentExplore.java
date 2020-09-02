@@ -2,6 +2,8 @@ package com.breadwallet.presenter.fragments;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -13,12 +15,19 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
+import android.text.Editable;
 import android.text.Html;
+import android.text.TextWatcher;
 import android.util.Log;
+import android.util.Patterns;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -60,6 +69,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -92,8 +102,9 @@ public class FragmentExplore extends Fragment implements OnStartDragListener, Mi
     private ItemTouchHelper mItemTouchHelper;
     private View mDoneBtn;
     private View mCancelBtn;
-    private View mAddBtn;
-    private View mEditBtn;
+    //    private View mAddBtn;
+//    private View mEditBtn;
+    private EditText mURLInput;
     private View mOkBtn;
     private View mEditPopView;
     private View mAddPopView;
@@ -200,8 +211,9 @@ public class FragmentExplore extends Fragment implements OnStartDragListener, Mi
         mOkBtn = rootView.findViewById(R.id.disclaim_ok_btn);
         mDoneBtn = rootView.findViewById(R.id.explore_done_tv);
         mCancelBtn = rootView.findViewById(R.id.explore_cancel_tv);
-        mAddBtn = rootView.findViewById(R.id.explore_add_tv);
-        mEditBtn = rootView.findViewById(R.id.explore_edit_tv);
+//        mAddBtn = rootView.findViewById(R.id.explore_add_tv);
+//        mEditBtn = rootView.findViewById(R.id.explore_edit_tv);
+        mURLInput = rootView.findViewById(R.id.urlInput);
         mMyAppsRv = rootView.findViewById(R.id.app_list_rv);
         mEditPopView = rootView.findViewById(R.id.explore_edit_pop);
         mAddPopView = rootView.findViewById(R.id.explore_add_pop);
@@ -224,42 +236,59 @@ public class FragmentExplore extends Fragment implements OnStartDragListener, Mi
             mItems.clear();
             mRemoveApp.clear();
 
-//            AssetManager assetManager = getContext().getApplicationContext().getAssets();
-//            String[] apps = assetManager.list("apps");
-            BRSharedPrefs.putAddedAppId(getContext(), new Gson().toJson(mAppIds));
-            final List<MyAppItem> tmp = ProfileDataSource.getInstance(getContext()).getMyAppItems();
-            if (tmp != null && tmp.size()>0) {
-                mItems.addAll(tmp);
-                for (MyAppItem item : tmp) {
-                    mAppIds.add(item.appId);
-                    BRSharedPrefs.putAddedAppId(getContext(), new Gson().toJson(mAppIds));
-                }
-                mAdapter.notifyDataSetChanged();
+////            AssetManager assetManager = getContext().getApplicationContext().getAssets();
+////            String[] apps = assetManager.list("apps");
+//            BRSharedPrefs.putAddedAppId(getContext(), new Gson().toJson(mAppIds));
+//            final List<MyAppItem> tmp = ProfileDataSource.getInstance(getContext()).getMyAppItems();
+//            if (tmp != null && tmp.size()>0) {
+//                mItems.addAll(tmp);
+//                for (MyAppItem item : tmp) {
+//                    mAppIds.add(item.appId);
+//                    BRSharedPrefs.putAddedAppId(getContext(), new Gson().toJson(mAppIds));
+//                }
+//                mAdapter.notifyDataSetChanged();
+//
+//                boolean need = BRSharedPrefs.needAddApps(getContext());
+//                if(need) {
+//                    BRExecutor.getInstance().forLightWeightBackgroundTasks().execute(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            try {
+//                                addVotemeApp();
+//                                addMiniAppsApp();
+//                                BRSharedPrefs.putNeedAddApps(getContext(), false);
+//                            } catch (Exception e) {
+//                                e.printStackTrace();
+//                            } finally {
+//                                dialogDismiss();
+//                            }
+//                        }
+//                    });
+//                }
+//            } else {
+//                BRExecutor.getInstance().forLightWeightBackgroundTasks().execute(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        getInterApps(tmp);
+//                    }
+//                });
+//            }
+            SharedPreferences sp = getContext().getSharedPreferences("MyPublicPrefsFile", Context.MODE_PRIVATE);
+            Set<String> favorites = sp.getStringSet("favorites", null);
 
-                boolean need = BRSharedPrefs.needAddApps(getContext());
-                if(need) {
-                    BRExecutor.getInstance().forLightWeightBackgroundTasks().execute(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                addVotemeApp();
-                                addMiniAppsApp();
-                                BRSharedPrefs.putNeedAddApps(getContext(), false);
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            } finally {
-                                dialogDismiss();
-                            }
-                        }
-                    });
+            if(favorites != null){
+                String[] favoriteData;
+                MyAppItem item;
+                for (String favorite : favorites) {
+                    favoriteData = favorite.split("<\\|>");
+                    item = new MyAppItem();
+                    item.name = favoriteData[0];
+                    item.url = favoriteData[1];
+                    item.icon = favoriteData[2];
+                    mItems.add(item);
                 }
-            } else {
-                BRExecutor.getInstance().forLightWeightBackgroundTasks().execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        getInterApps(tmp);
-                    }
-                });
+
+                mAdapter.notifyDataSetChanged();
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -444,7 +473,8 @@ public class FragmentExplore extends Fragment implements OnStartDragListener, Mi
             } else {
                 url = url + "?browser=elaphant";
             }
-            UiUtils.startWebviewActivity(getActivity(), url, item.appId);
+            //UiUtils.startWebviewActivity(getActivity(), url, item.appId);
+            UiUtils.startWebviewActivity(getActivity(), url);
 //
 //            String languageCode = Locale.getDefault().getLanguage();
 //            if (!StringUtil.isNullOrEmpty(languageCode) && languageCode.contains("zh")) {
@@ -467,22 +497,65 @@ public class FragmentExplore extends Fragment implements OnStartDragListener, Mi
         }
     }
 
-    private void initListener() {
-        mAddBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mMenuPopLayout.setVisibility(mAddPopView.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
-                mAddPopView.setVisibility(mAddPopView.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
-                mEditPopView.setVisibility(View.GONE);
-            }
-        });
+    private void go(){
+        String url = mURLInput.getText().toString();
+        if (!Patterns.WEB_URL.matcher(url).matches() || url.isEmpty()) {
+            Toast.makeText(getContext(), R.string.mini_app_invalid_url, Toast.LENGTH_SHORT).show();
+        }else if(url.indexOf("http") == 0){
+            UiUtils.startWebviewActivity(getActivity(), url);
+        }else{
+            UiUtils.startWebviewActivity(getActivity(), "https://"+url);
+        }
+    }
 
-        mEditBtn.setOnClickListener(new View.OnClickListener() {
+    private void initListener() {
+//        mAddBtn.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                mMenuPopLayout.setVisibility(mAddPopView.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
+//                mAddPopView.setVisibility(mAddPopView.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
+//                mEditPopView.setVisibility(View.GONE);
+//            }
+//        });
+
+//        mEditBtn.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                mMenuPopLayout.setVisibility(mEditPopView.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
+//                mEditPopView.setVisibility(mEditPopView.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
+//                mAddPopView.setVisibility(View.GONE);
+//            }
+//        });
+
+//        mURLInput.setOnKeyListener(new View.OnKeyListener() {
+//            @Override
+//            public boolean onKey(View view, int i, KeyEvent event) {
+//                if(i == KeyEvent.KEYCODE_ENTER){
+//                    go();
+//                }
+//                return false;
+//            }
+//        });
+
+        mURLInput.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            private boolean isActionUp = false;
+
             @Override
-            public void onClick(View v) {
-                mMenuPopLayout.setVisibility(mEditPopView.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
-                mEditPopView.setVisibility(mEditPopView.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
-                mAddPopView.setVisibility(View.GONE);
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if(event != null) {
+                    if (actionId == EditorInfo.IME_ACTION_GO && event.getAction() == KeyEvent.ACTION_UP) {
+                        go();
+                    }
+                }else{
+                    if(actionId == EditorInfo.IME_ACTION_GO){
+                        isActionUp = !isActionUp;
+                    }
+
+                    if(isActionUp){
+                        go();
+                    }
+                }
+                return false;
             }
         });
 
@@ -655,8 +728,8 @@ public class FragmentExplore extends Fragment implements OnStartDragListener, Mi
     }
 
     private void changeView(boolean isEdit) {
-        mAddBtn.setVisibility(isEdit ? View.GONE : View.VISIBLE);
-        mEditBtn.setVisibility(isEdit ? View.GONE : View.VISIBLE);
+//        mAddBtn.setVisibility(isEdit ? View.GONE : View.VISIBLE);
+//        mEditBtn.setVisibility(isEdit ? View.GONE : View.VISIBLE);
         mCancelBtn.setVisibility(isEdit ? View.VISIBLE : View.GONE);
         mDoneBtn.setVisibility(isEdit ? View.VISIBLE : View.GONE);
     }

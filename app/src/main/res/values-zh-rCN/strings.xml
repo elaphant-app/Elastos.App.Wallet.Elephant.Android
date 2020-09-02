@@ -1249,4 +1249,11 @@
     <string name="crc_scheme_candidate_and_votes_inconsistent">Candidate参数的个数和Votes参数的个数不一致</string>
     <string name="crc_scheme_inactive_did">参数里有未激活的DID</string>
     <string name="crc_scheme_votes_must_positive">Votes参数应为正数</string>
+    <string name="My.favorites.title">收藏</string>
+    <string name="enter_website_url">请输入网址</string>
+    <string name="favoriteIt">网站已收藏</string>
+    <string name="removeFromFavorites">已取消收藏</string>
+    <string name="reload">刷新</string>
+    <string name="bookmarkIt">收藏网站</string>
+    <string name="disFavoriteIt">取消收藏</string>
 </resources>

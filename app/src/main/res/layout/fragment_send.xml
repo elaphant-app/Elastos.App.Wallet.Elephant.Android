@@ -379,14 +379,16 @@
 
         <com.breadwallet.presenter.customviews.BREdit
             android:id="@+id/comment_edit"
-            android:layout_width="300dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:minHeight="70dp"
-            android:layout_marginEnd="16dp"
             android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
             android:background="@android:color/transparent"
             android:hint="@string/Send.descriptionLabel"
-            android:maxLength="256" />
+            android:maxLength="256"
+            android:minHeight="70dp"
+            android:scrollIndicators="right"
+            android:singleLine="true" />
 
         <View
             android:id="@+id/separator4"

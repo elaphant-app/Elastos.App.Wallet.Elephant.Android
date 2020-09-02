@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/primary_background">
@@ -9,7 +10,8 @@
         android:id="@+id/web_title"
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:background="#00000000">
+        android:background="#00000000"
+        tools:ignore="MissingConstraints">
 
         <com.breadwallet.presenter.customviews.BaseTextView
             android:id="@+id/explore_web_back"
@@ -90,37 +92,100 @@
         android:id="@+id/explore_web_about_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:visibility="gone"
         android:background="#33000000"
-        android:layout_marginTop="56dp"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent">
 
-        <com.breadwallet.presenter.customviews.BaseTextView
-            android:id="@+id/explore_web_about"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:gravity="center"
-            android:background="@color/white"
-            app:layout_constraintBottom_toTopOf="@+id/explore_horizontal_line"
-            android:textColor="@color/black_333333"
-            android:text="@string/explore_menu_about"/>
+            android:layout_height="match_parent"
+            android:gravity="bottom"
+            android:orientation="vertical">
 
-        <View
-            android:id="@+id/explore_horizontal_line"
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            app:layout_constraintBottom_toTopOf="@+id/explore_web_cancle"
-            android:background="#F7F8FB"/>
+            <View
+                android:id="@+id/explore_horizontal_line"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#F7F8FB" />
 
-        <com.breadwallet.presenter.customviews.BaseTextView
-            android:id="@+id/explore_web_cancle"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:gravity="center"
-            android:background="@color/white"
-            android:textColor="@color/black_333333"
-            app:layout_constraintBottom_toBottomOf="parent"
-            android:text="@string/explore_menu_cancel"/>
+            <View
+                android:id="@+id/explore_horizontal_line3"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#F7F8FB" />
+
+            <View
+                android:id="@+id/explore_horizontal_line2"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#F7F8FB" />
+
+            <View
+                android:id="@+id/explore_horizontal_line4"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#F7F8FB" />
+
+            <View
+                android:id="@+id/explore_horizontal_line5"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#F7F8FB" />
+
+            <com.breadwallet.presenter.customviews.BaseTextView
+                android:id="@+id/explore_web_share"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:background="@color/white"
+                android:gravity="center"
+                android:text="@string/Receive.share"
+                android:textColor="@color/black_333333" />
+
+            <com.breadwallet.presenter.customviews.BaseTextView
+                android:id="@+id/explore_web_copyurl"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:background="@color/white"
+                android:gravity="center"
+                android:text="@android:string/copyUrl"
+                android:textColor="@color/black_333333" />
+
+            <com.breadwallet.presenter.customviews.BaseTextView
+                android:id="@+id/explore_web_reload"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:background="@color/white"
+                android:gravity="center"
+                android:text="@string/reload"
+                android:textColor="@color/black_333333" />
+
+            <com.breadwallet.presenter.customviews.BaseTextView
+                android:id="@+id/explore_web_switch"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:background="@color/white"
+                android:gravity="center"
+                android:text="@string/multi_wallet_switch"
+                android:textColor="@color/black_333333" />
+
+            <com.breadwallet.presenter.customviews.BaseTextView
+                android:id="@+id/explore_web_bookmark"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:background="@color/white"
+                android:gravity="center"
+                android:text="@string/bookmarkIt"
+                android:textColor="@color/black_333333" />
+
+            <com.breadwallet.presenter.customviews.BaseTextView
+                android:id="@+id/explore_web_cancle"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:background="@color/white"
+                android:gravity="center"
+                android:text="@string/Button.cancel"
+                android:textColor="@color/black_333333" />
+        </LinearLayout>
 
     </android.support.constraint.ConstraintLayout>
 

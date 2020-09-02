@@ -13,7 +13,7 @@
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="10dp"
-        android:text="@string/My.explore.title"
+        android:text="@string/My.favorites.title"
         android:textColor="@color/black_333333"
         android:textSize="22sp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -46,50 +46,34 @@
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.breadwallet.presenter.customviews.BaseTextView
-        android:id="@+id/explore_add_tv"
-        android:layout_width="20dp"
-        android:layout_height="20dp"
-        android:layout_marginTop="15dp"
-        android:layout_marginRight="56dp"
-        android:background="@drawable/ic_explore_add"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-
-    <com.breadwallet.presenter.customviews.BaseTextView
-        android:id="@+id/explore_edit_tv"
-        android:layout_width="20dp"
-        android:layout_height="20dp"
-        android:layout_marginTop="15dp"
-        android:layout_marginRight="20dp"
-        android:background="@drawable/ic_explore_edit"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/title">
 
-        <com.breadwallet.presenter.customviews.BaseTextView
-            android:id="@+id/my_apps_title_tv"
-            android:layout_width="wrap_content"
+        <EditText
+            android:id="@+id/urlInput"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="20dp"
-            android:layout_marginTop="32dp"
-            android:text="@string/explore_mini_app_title"
-            android:textColor="#1f1f1f"
-            android:textSize="15sp"
-            app:layout_constraintLeft_toLeftOf="parent" />
+            android:ems="10"
+            android:imeOptions="actionGo"
+            android:inputType="textUri"
+            android:text="@string/enter_website_url" />
 
         <android.support.v7.widget.RecyclerView
             android:id="@+id/app_list_rv"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_below="@id/urlInput"
             android:layout_marginTop="18dp"
-            android:paddingBottom="50dp"
-            android:layout_below="@+id/my_apps_title_tv"/>
+            android:paddingBottom="50dp" />
+
     </RelativeLayout>
 
     <include

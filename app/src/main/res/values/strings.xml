@@ -1020,6 +1020,7 @@
     <string name="User.Not.Author.Continue">Continue</string>
 
     <string name="My.explore.title">Explore</string>
+    <string name="My.favorites.title">Favorites</string>
     <!--profile-->
     <string name="My.Profile.Title">My Profile</string>
     <string name="My.Profile.Nickname">Nickname</string>
@@ -1256,5 +1257,11 @@
     <string name="crc_scheme_candidate_and_votes_inconsistent">The number of candidates is inconsistent with the number of votes</string>
     <string name="crc_scheme_inactive_did">Inactive did in parameter</string>
     <string name="crc_scheme_votes_must_positive">The votes parameter should be a positive number</string>
+    <string name="enter_website_url">Enter Website URL</string>
+    <string name="favoriteIt">Favorited this website.</string>
+    <string name="removeFromFavorites">Removed this website from yours favorites</string>
+    <string name="reload">Reload</string>
+    <string name="bookmarkIt">Bookmarked This Website</string>
+    <string name="disFavoriteIt">Remove from Favorites</string>
 
 </resources>

@@ -35,6 +35,7 @@ import com.breadwallet.BreadApp;
 import com.breadwallet.BuildConfig;
 import com.breadwallet.R;
 import com.breadwallet.presenter.activities.WalletActivity;
+import com.breadwallet.presenter.activities.WebviewScriptConfig;
 import com.breadwallet.presenter.activities.crc.CrcDataSource;
 import com.breadwallet.presenter.activities.crc.FlowLayout;
 import com.breadwallet.presenter.customviews.BRButton;
@@ -69,6 +70,7 @@ import com.breadwallet.wallet.wallets.ela.ElaDataSource;
 import com.breadwallet.wallet.wallets.ela.WalletElaManager;
 import com.breadwallet.wallet.wallets.ethereum.WalletEthManager;
 import com.breadwallet.wallet.wallets.ethereum.WalletTokenManager;
+import com.breadwallet.wallet.wallets.side.ElaSideEthereumWalletManager;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -158,6 +160,9 @@ public class FragmentSend extends ModalDialogFragment implements BRKeyboard.OnIn
 
     public static boolean mFromElapay = false;
     public static boolean mIsSend = false;
+    public CryptoRequest theRequest = null;
+    public FragmentSendCallback theCallbacks = null;
+    public WebviewScriptConfig.networkConnectByDapp specifiedNetwork = null;
 
     private VoteNodeAdapter mAdapter;
     private List<ProducerEntity> mProducers = new ArrayList<>();
@@ -203,7 +208,15 @@ public class FragmentSend extends ModalDialogFragment implements BRKeyboard.OnIn
         mRegularFeeButton = rootView.findViewById(R.id.left_button);
         mEconomyFeeButton = rootView.findViewById(R.id.right_button);
         mCloseButton = rootView.findViewById(R.id.close_button);
-        BaseWalletManager wm = WalletsMaster.getInstance(getActivity()).getCurrentWallet(getActivity());
+
+        BaseWalletManager wm;
+        if(specifiedNetwork == null){
+            wm = WalletsMaster.getInstance(getActivity()).getCurrentWallet(getActivity());
+        }else if(specifiedNetwork == WebviewScriptConfig.networkConnectByDapp.ethereum){
+            wm = WalletEthManager.getInstance(getActivity());
+        }else{
+            wm = ElaSideEthereumWalletManager.getInstance(getActivity());
+        }
         mSelectedCurrencyCode = BRSharedPrefs.isCryptoPreferred(getActivity()) ? wm.getIso() : BRSharedPrefs.getPreferredFiatIso(getContext());
 
         mViewModel = ViewModelProviders.of(this).get(SendViewModel.class);
@@ -249,6 +262,8 @@ public class FragmentSend extends ModalDialogFragment implements BRKeyboard.OnIn
 
         initDposAdapter();
         initCrcAdapter();
+
+        saveViewModelData(theRequest);
 
         return rootView;
     }
@@ -652,8 +667,18 @@ public class FragmentSend extends ModalDialogFragment implements BRKeyboard.OnIn
             public void onClick(View v) {
                 //not allowed now
                 if (!UiUtils.isClickAllowed()) return;
+
                 WalletsMaster master = WalletsMaster.getInstance(getActivity());
-                final BaseWalletManager wm = master.getCurrentWallet(getActivity());
+                final BaseWalletManager wm;
+                if(specifiedNetwork != null){
+                    if(specifiedNetwork== WebviewScriptConfig.networkConnectByDapp.ethereum){
+                        wm = WalletEthManager.getInstance(getActivity());
+                    }else{
+                        wm = ElaSideEthereumWalletManager.getInstance(getActivity());
+                    }
+                }else{
+                    wm = master.getCurrentWallet(getActivity());
+                }
                 //get the current wallet used
                 if (wm == null) {
                     Log.e(TAG, "onClick: Wallet is null and it can't happen.");
@@ -669,9 +694,16 @@ public class FragmentSend extends ModalDialogFragment implements BRKeyboard.OnIn
                 //inserted amount
                 BigDecimal rawAmount = new BigDecimal(Utils.isNullOrEmpty(amountStr) || amountStr.equalsIgnoreCase(".") ? "0" : amountStr);
                 //is the chosen ISO a crypto (could be a fiat currency)
-                boolean isIsoCrypto = master.isIsoCrypto(getActivity(), mSelectedCurrencyCode);
 
-                BigDecimal cryptoAmount = isIsoCrypto ? wm.getSmallestCryptoForCrypto(getActivity(), rawAmount) : wm.getSmallestCryptoForFiat(getActivity(), rawAmount);
+                boolean isIsoCrypto = false;
+                BigDecimal cryptoAmount;
+                //cryptoAmount = isIsoCrypto ? wm.getSmallestCryptoForCrypto(getActivity(), rawAmount) : wm.getSmallestCryptoForFiat(getActivity(), rawAmount);
+                if(specifiedNetwork == null){
+                    isIsoCrypto = master.isIsoCrypto(getActivity(), mSelectedCurrencyCode);
+                    cryptoAmount = isIsoCrypto ? wm.getSmallestCryptoForCrypto(getActivity(), rawAmount) : wm.getSmallestCryptoForFiat(getActivity(), rawAmount);
+                }else{
+                    cryptoAmount = wm.getSmallestCryptoForCrypto(getActivity(), rawAmount);
+                }
 
                 CryptoRequest req = CryptoUriParser.parseRequest(getActivity(), rawAddress);
                 if (req == null || Utils.isNullOrEmpty(req.address)) {
@@ -705,7 +737,13 @@ public class FragmentSend extends ModalDialogFragment implements BRKeyboard.OnIn
 
                     BigDecimal rawFee = wm.getEstimatedFee(cryptoAmount, mAddressEdit.getText().toString());
                     BaseWalletManager ethWm = WalletEthManager.getInstance(app);
-                    BigDecimal isoFee = isIsoCrypto ? rawFee : ethWm.getFiatForSmallestCrypto(app, rawFee, null);
+
+                    BigDecimal isoFee;
+                    if(specifiedNetwork == null){
+                        isoFee = isIsoCrypto ? rawFee : ethWm.getFiatForSmallestCrypto(app, rawFee, null);
+                    }else{
+                        isoFee = ethWm.getFiatForSmallestCrypto(app, rawFee, null);
+                    }
                     BigDecimal b = ethWm.getCachedBalance(app);
                     if (isoFee.compareTo(b) > 0) {
                         if (allFilled) {
@@ -724,7 +762,17 @@ public class FragmentSend extends ModalDialogFragment implements BRKeyboard.OnIn
                     BRExecutor.getInstance().forLightWeightBackgroundTasks().execute(new Runnable() {
                         @Override
                         public void run() {
-                            SendManager.sendTransaction(getActivity(), item, wm, null);
+                            SendManager.sendTransaction(getActivity(), item, wm, new SendManager.SendCompletion() {
+                                @Override
+                                public void onCompleted(String hash, boolean succeed) {
+                                    if(theCallbacks != null){
+                                        theCallbacks.onSent(hash);
+                                    }
+
+                                    theCallbacks = null;
+                                    specifiedNetwork = null;
+                                }
+                            });
                         }
                     });
 
@@ -745,6 +793,13 @@ public class FragmentSend extends ModalDialogFragment implements BRKeyboard.OnIn
             @Override
             public void onClick(View v) {
                 closeWithAnimation();
+
+                if(theCallbacks != null){
+                    theCallbacks.onCancel();
+                }
+
+                theCallbacks = null;
+                specifiedNetwork = null;
             }
         });
 
@@ -1291,7 +1346,16 @@ public class FragmentSend extends ModalDialogFragment implements BRKeyboard.OnIn
         String code = null;
         String amount = null;
         String memo = null;
-        BaseWalletManager wm = WalletsMaster.getInstance(getActivity()).getCurrentWallet(BreadApp.mContext);
+
+        BaseWalletManager wm;
+        if(specifiedNetwork == null){
+            wm = WalletsMaster.getInstance(getActivity()).getCurrentWallet(BreadApp.mContext);
+        }else if(specifiedNetwork == WebviewScriptConfig.networkConnectByDapp.ethereum){
+            wm = WalletEthManager.getInstance(getActivity());
+        }else {
+            wm = ElaSideEthereumWalletManager.getInstance(getActivity());
+        }
+
         if (request==null) {
             if (mCommentEdit != null) {
                 memo = mCommentEdit.getText().toString();
