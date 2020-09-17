@@ -3,6 +3,7 @@ package com.breadwallet.presenter.fragments;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
@@ -31,7 +32,9 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.breadwallet.BreadApp;
 import com.breadwallet.R;
+import com.breadwallet.presenter.activities.ExploreWebActivity;
 import com.breadwallet.presenter.customviews.BaseTextView;
 import com.breadwallet.presenter.customviews.LoadingDialog;
 import com.breadwallet.presenter.entities.MyAppItem;
@@ -67,6 +70,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -184,6 +188,17 @@ public class FragmentExplore extends Fragment implements OnStartDragListener, Mi
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         this.mActivity = activity;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        BreadApp app = (BreadApp)this.mActivity.getApplication();
+        if(app.isBookmarkChanged){
+            initApps();
+            app.isBookmarkChanged = false;
+        }
     }
 
     @Nullable
@@ -454,14 +469,14 @@ public class FragmentExplore extends Fragment implements OnStartDragListener, Mi
         if (null != mAboutShowListener) mAboutShowListener.hide();
         mAboutAppItem = item;
 
-        String languageCode = Locale.getDefault().getLanguage();
-        if(!StringUtil.isNullOrEmpty(languageCode) && languageCode.contains("zh")){
-            mAboutAboutView.setText(String.format(getString(R.string.explore_pop_about), mAboutAppItem.name_zh_CN));
-        } else {
-            mAboutAboutView.setText(String.format(getString(R.string.explore_pop_about), mAboutAppItem.name_en));
-        }
-        if(StringUtil.isNullOrEmpty(mAboutAppItem.name_zh_CN) && StringUtil.isNullOrEmpty(mAboutAppItem.name_en))
-            mAboutAboutView.setText(mAboutAppItem.name);
+//        String languageCode = Locale.getDefault().getLanguage();
+//        if(!StringUtil.isNullOrEmpty(languageCode) && languageCode.contains("zh")){
+//            mAboutAboutView.setText(String.format(getString(R.string.explore_pop_about), mAboutAppItem.name_zh_CN));
+//        } else {
+//            mAboutAboutView.setText(String.format(getString(R.string.explore_pop_about), mAboutAppItem.name_en));
+//        }
+//        if(StringUtil.isNullOrEmpty(mAboutAppItem.name_zh_CN) && StringUtil.isNullOrEmpty(mAboutAppItem.name_en))
+//            mAboutAboutView.setText(mAboutAppItem.name);
     }
 
     @Override
@@ -655,40 +670,73 @@ public class FragmentExplore extends Fragment implements OnStartDragListener, Mi
             @Override
             public void onClick(View v) {
                 mAboutPopLayout.setVisibility(View.GONE);
-                if (null != mAboutShowListener) mAboutShowListener.show();
-                if (null != mAboutAppItem) {
-                    StringBuilder sb = new StringBuilder();
 
-                    String languageCode = Locale.getDefault().getLanguage();
-                    if(!StringUtil.isNullOrEmpty(languageCode) && languageCode.contains("zh")){
-                        sb.append(mAboutAppItem.name_zh_CN);
-                    } else {
-                        sb.append(mAboutAppItem.name_en);
-                    }
-                    sb.append(" ");
-                    sb.append("https://launch.elaphant.app/?");
-                    if(!StringUtil.isNullOrEmpty(languageCode) && languageCode.contains("zh")){
-                        sb.append("appName=").append(Uri.encode(mAboutAppItem.name_zh_CN)).append("&");
-                        sb.append("appTitle=").append(Uri.encode(mAboutAppItem.name_zh_CN)).append("&");
-                    } else {
-                        sb.append("appName=").append(Uri.encode(mAboutAppItem.name_en)).append("&");
-                        sb.append("appTitle=").append(Uri.encode(mAboutAppItem.name_en)).append("&");
-                    }
-                    sb.append("autoRedirect=").append("True").append("&");
-                    sb.append("redirectURL=").append(Uri.encode(mAboutAppItem.path.trim().
-                            replace("http:", "elaphant:")
-                            .replace("https:", "elaphant:")));
-                    UiUtils.shareCapsule(getContext(), sb.toString());
+                if (null != mAboutShowListener) mAboutShowListener.show();
+
+                if (null != mAboutAppItem) {
+                    Intent shareIntent = new Intent();
+                    shareIntent.setAction(Intent.ACTION_SEND);
+                    shareIntent.setType("text/plain");
+                    shareIntent.putExtra(Intent.EXTRA_TEXT, mAboutAppItem.url);
+                    shareIntent = Intent.createChooser(shareIntent, "");
+                    startActivity(shareIntent);
                 }
+
+                /////////////////////////////////////////////
+//                if (null != mAboutShowListener) mAboutShowListener.show();
+//                if (null != mAboutAppItem) {
+//                    StringBuilder sb = new StringBuilder();
+//
+//                    String languageCode = Locale.getDefault().getLanguage();
+//                    if(!StringUtil.isNullOrEmpty(languageCode) && languageCode.contains("zh")){
+//                        sb.append(mAboutAppItem.name_zh_CN);
+//                    } else {
+//                        sb.append(mAboutAppItem.name_en);
+//                    }
+//                    sb.append(" ");
+//                    sb.append("https://launch.elaphant.app/?");
+//                    if(!StringUtil.isNullOrEmpty(languageCode) && languageCode.contains("zh")){
+//                        sb.append("appName=").append(Uri.encode(mAboutAppItem.name_zh_CN)).append("&");
+//                        sb.append("appTitle=").append(Uri.encode(mAboutAppItem.name_zh_CN)).append("&");
+//                    } else {
+//                        sb.append("appName=").append(Uri.encode(mAboutAppItem.name_en)).append("&");
+//                        sb.append("appTitle=").append(Uri.encode(mAboutAppItem.name_en)).append("&");
+//                    }
+//                    sb.append("autoRedirect=").append("True").append("&");
+//                    sb.append("redirectURL=").append(Uri.encode(mAboutAppItem.path.trim().
+//                            replace("http:", "elaphant:")
+//                            .replace("https:", "elaphant:")));
+//                    UiUtils.shareCapsule(getContext(), sb.toString());
+//                }
             }
         });
 
         mAboutAboutView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                // About按钮改为了删除。
                 mAboutPopLayout.setVisibility(View.GONE);
+
                 if (null != mAboutShowListener) mAboutShowListener.show();
-                UiUtils.startMiniAppAboutActivity(getContext(), mAboutAppItem.appId);
+//                UiUtils.startMiniAppAboutActivity(getContext(), mAboutAppItem.appId);
+                /////////////////////////////////////
+
+                String tempString;
+                SharedPreferences sp = mActivity.getSharedPreferences("MyPublicPrefsFile", Context.MODE_PRIVATE);
+                Set<String> favorites = sp.getStringSet("favorites", new HashSet<String>());
+                String dappUrl = mAboutAppItem.url;
+                if(favorites != null && favorites.size() > 0){
+                    for (String favorite : favorites) {
+                        if (dappUrl.contains(favorite.split("<\\|>")[1])) {
+                            favorites.remove(favorite);
+                            mItems.remove(mAboutAppItem);
+                            break;
+                        }
+                    }
+                }
+
+                SharedPreferences.Editor editor = sp.edit();
+                editor.putStringSet("favorites",favorites).apply();
             }
         });
 

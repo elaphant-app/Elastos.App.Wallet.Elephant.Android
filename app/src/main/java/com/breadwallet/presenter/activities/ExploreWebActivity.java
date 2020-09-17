@@ -215,6 +215,8 @@ public class ExploreWebActivity extends BRActivity {
 
                     SharedPreferences.Editor editor = sp.edit();
                     editor.putStringSet("favorites",favorites).commit();
+
+                    ((BreadApp)ExploreWebActivity.this.getApplication()).isBookmarkChanged = true;
                 }
 
                 finish();
@@ -348,7 +350,7 @@ public class ExploreWebActivity extends BRActivity {
 
                 Log.i("schemeLoadurl", "url:"+url);
 
-                String title = view.getTitle();
+                webTitle = view.getTitle();
 
                 WebBackForwardList mWebBackForwardList = webView.copyBackForwardList();
                 int account = mWebBackForwardList.getCurrentIndex();
@@ -356,7 +358,7 @@ public class ExploreWebActivity extends BRActivity {
                     mTitleTv.setText(getResources().getString(R.string.redpackage_title));
                     mBackTv.setVisibility((account>1)?View.VISIBLE:View.GONE);
                 } else {
-                    mTitleTv.setText(title);
+                    mTitleTv.setText(webTitle);
                     mBackTv.setVisibility((account>0)?View.VISIBLE:View.GONE);
                 }
 

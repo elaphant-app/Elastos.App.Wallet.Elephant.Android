@@ -1261,7 +1261,7 @@
     <string name="favoriteIt">Favorited this website.</string>
     <string name="removeFromFavorites">Removed this website from yours favorites</string>
     <string name="reload">Reload</string>
-    <string name="bookmarkIt">Bookmarked This Website</string>
+    <string name="bookmarkIt">Bookmark This Website</string>
     <string name="disFavoriteIt">Remove from Favorites</string>
 
 </resources>
