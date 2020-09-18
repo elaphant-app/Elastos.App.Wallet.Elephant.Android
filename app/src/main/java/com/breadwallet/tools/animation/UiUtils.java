@@ -623,7 +623,7 @@ public class UiUtils {
         context.startActivity(intent);
     }
 
-    public static void returnDataNeedSign(Activity activity, String returnUrl, String Data, String Sign, String appId, String targe) {
+    public static void returnDataNeedSign(Activity activity, String returnUrl, String Data, String Sign, String appId, String targe, boolean isInternal) {
         if (!StringUtil.isNullOrEmpty(returnUrl)) {
             String url;
             if (returnUrl.contains("?")) {
@@ -635,10 +635,14 @@ public class UiUtils {
             String addAppIds = BRSharedPrefs.getAddedAppId(activity);
             if (!StringUtil.isNullOrEmpty(addAppIds) && addAppIds.contains(appId)
                 /*|| (!StringUtil.isNullOrEmpty(targe) && targe.equals("internal"))*/) {
-                // UiUtils.startWebviewActivity(activity, url, appId);
-                Intent intent =new Intent(Intent.ACTION_VIEW);
-                intent.setData(Uri.parse(url));
-                activity.startActivity(intent);
+                if(isInternal){
+                    UiUtils.startWebviewActivity(activity, url);
+                }else{
+                    // UiUtils.startWebviewActivity(activity, url, appId);
+                    Intent intent =new Intent(Intent.ACTION_VIEW);
+                    intent.setData(Uri.parse(url));
+                    activity.startActivity(intent);
+                }
             } else {
                 UiUtils.openUrlByBrowser(activity, url);
             }

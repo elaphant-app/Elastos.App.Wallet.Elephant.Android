@@ -78,7 +78,7 @@ public class DidAuthorizeActivity extends BaseSettingsActivity {
     private String mUri;
     private boolean isOnEla = true;
     private LoadingDialog mLoadingDialog;
-
+    private boolean isInternal = true;
     private UriFactory uriFactory;
 
     @Override
@@ -91,8 +91,10 @@ public class DidAuthorizeActivity extends BaseSettingsActivity {
                 Uri uri = intent.getData();
                 Log.i(TAG, "server mUri: " + uri.toString());
                 mUri = uri.toString();
+                isInternal = false;
             } else {
                 mUri = intent.getStringExtra(Constants.INTENT_EXTRA_KEY.META_EXTRA);
+                isInternal = true;
             }
         }
 
@@ -411,7 +413,7 @@ public class DidAuthorizeActivity extends BaseSettingsActivity {
             public void run() {
                 try {
                     UiUtils.callbackDataNeedSign(DidAuthorizeActivity.this, backurl, entity);
-                    UiUtils.returnDataNeedSign(DidAuthorizeActivity.this, returnUrl, Data, Sign, appId, target);
+                    UiUtils.returnDataNeedSign(DidAuthorizeActivity.this, returnUrl, Data, Sign, appId, target, isInternal);
                 } catch (Exception e) {
                     showCallbackError();
                 } finally {
