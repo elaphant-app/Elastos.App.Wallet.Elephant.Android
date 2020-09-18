@@ -40,6 +40,10 @@ public class UriFactory {
         return getValue("DID".toLowerCase());
     }
 
+    public String getAddress() {
+        return getValue("Address".toLowerCase());
+    }
+
     public String getPublicKey() {
         return getValue("PublicKey".toLowerCase());
     }
