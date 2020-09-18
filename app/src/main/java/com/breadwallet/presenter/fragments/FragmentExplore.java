@@ -101,7 +101,7 @@ public class FragmentExplore extends Fragment implements OnStartDragListener, Mi
 
     private RecyclerView mMyAppsRv;
     private MiniAppsAdapter mAdapter;
-    private View mDisclaimLayout;
+//    private View mDisclaimLayout;
     private View mMenuPopLayout;
     private ItemTouchHelper mItemTouchHelper;
     private View mDoneBtn;
@@ -217,7 +217,7 @@ public class FragmentExplore extends Fragment implements OnStartDragListener, Mi
     private List<String> mAppIds = new ArrayList<>();
 
     private void initView(View rootView) {
-        mDisclaimLayout = rootView.findViewById(R.id.disclaim_layout);
+//        mDisclaimLayout = rootView.findViewById(R.id.disclaim_layout);
         mRemoveAppLayout = rootView.findViewById(R.id.explore_remove_app_layout);
         mMenuPopLayout = rootView.findViewById(R.id.explore_menu_pop_layout);
         mAboutPopLayout = rootView.findViewById(R.id.explore_about_layout);
@@ -239,8 +239,8 @@ public class FragmentExplore extends Fragment implements OnStartDragListener, Mi
         mAboutCancelView = rootView.findViewById(R.id.cancel_tv);
         mCancelView = rootView.findViewById(R.id.remove_mini_cancel);
         mRemoveView = rootView.findViewById(R.id.remove_mini_confirm);
-        if (BRSharedPrefs.getDisclaimShow(getContext()))
-            mDisclaimLayout.setVisibility(View.VISIBLE);
+//        if (BRSharedPrefs.getDisclaimShow(getContext()))
+//            mDisclaimLayout.setVisibility(View.VISIBLE);
         mLoadingDialog = new LoadingDialog(getContext(), R.style.progressDialog);
         mLoadingDialog.setCanceledOnTouchOutside(false);
     }
@@ -629,20 +629,20 @@ public class FragmentExplore extends Fragment implements OnStartDragListener, Mi
             }
         });
 
-        mOkBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                mDisclaimLayout.setVisibility(View.GONE);
-                BRSharedPrefs.setDisclaimshow(getContext(), false);
-            }
-        });
+//        mOkBtn.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                mDisclaimLayout.setVisibility(View.GONE);
+//                BRSharedPrefs.setDisclaimshow(getContext(), false);
+//            }
+//        });
 
-        mDisclaimLayout.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View view, MotionEvent motionEvent) {
-                return true;
-            }
-        });
+//        mDisclaimLayout.setOnTouchListener(new View.OnTouchListener() {
+//            @Override
+//            public boolean onTouch(View view, MotionEvent motionEvent) {
+//                return true;
+//            }
+//        });
         mRemoveAppLayout.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {

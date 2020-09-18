@@ -62,9 +62,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ems="10"
+            android:hint="@string/enter_website_url"
             android:imeOptions="actionGo"
-            android:inputType="textUri"
-            android:text="@string/enter_website_url" />
+            android:inputType="textUri" />
 
         <android.support.v7.widget.RecyclerView
             android:id="@+id/app_list_rv"
@@ -81,10 +81,10 @@
         layout="@layout/explore_pop_layout"
         android:visibility="gone" />
 
-    <include
-        android:id="@+id/disclaim_layout"
-        layout="@layout/explore_dialog_layout"
-        android:visibility="gone" />
+<!--    <include-->
+<!--        android:id="@+id/disclaim_layout"-->
+<!--        layout="@layout/explore_dialog_layout"-->
+<!--        android:visibility="gone" />-->
 
     <include
         android:id="@+id/explore_about_layout"
