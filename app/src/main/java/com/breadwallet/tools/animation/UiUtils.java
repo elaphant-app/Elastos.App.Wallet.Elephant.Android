@@ -632,18 +632,16 @@ public class UiUtils {
                 url = returnUrl + "?Data=" + Uri.encode(Data) + "&Sign=" + Uri.encode(Sign) /*+ "&browser=elaphant"*/;
             }
 
-            String addAppIds = BRSharedPrefs.getAddedAppId(activity);
-            if (!StringUtil.isNullOrEmpty(addAppIds) && addAppIds.contains(appId)
-                /*|| (!StringUtil.isNullOrEmpty(targe) && targe.equals("internal"))*/) {
-                if(isInternal){
-                    UiUtils.startWebviewActivity(activity, url);
-                }else{
-                    // UiUtils.startWebviewActivity(activity, url, appId);
-                    Intent intent =new Intent(Intent.ACTION_VIEW);
-                    intent.setData(Uri.parse(url));
-                    activity.startActivity(intent);
-                }
-            } else {
+//            String addAppIds = BRSharedPrefs.getAddedAppId(activity);
+//            if (!StringUtil.isNullOrEmpty(addAppIds) && addAppIds.contains(appId)
+//                /*|| (!StringUtil.isNullOrEmpty(targe) && targe.equals("internal"))*/) {
+//                 UiUtils.startWebviewActivity(activity, url, appId);
+//            } else {
+//                UiUtils.openUrlByBrowser(activity, url);
+//            }
+            if(isInternal){
+                UiUtils.startWebviewActivity(activity, url);
+            }else{
                 UiUtils.openUrlByBrowser(activity, url);
             }
         }

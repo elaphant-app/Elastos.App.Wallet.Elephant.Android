@@ -370,6 +370,11 @@ public class ExploreWebActivity extends BRActivity {
                         }
                     }
                 });
+            }
+
+            @Override
+            public void onLoadResource(WebView view, String url) {
+                super.onLoadResource(view, url);
 
                 if (Build.VERSION.SDK_INT >= 19) {
                     config = WebviewScriptConfig.getInstance(ExploreWebActivity.this);
@@ -387,8 +392,8 @@ public class ExploreWebActivity extends BRActivity {
                                     "window.web3 = new window.Web3(window.ethereum);" +
                                     "window.web3.eth.defaultAccount = config.address;" +
                                     "window.chrome = {webstore: {}};" +
-                                    "})();" +
-                                    "if(window.onload){var func=window.onload;func();}";
+                                    "})();";
+                            //"if(window.onload){var func=window.onload;func();}";
                             webView.evaluateJavascript(js, new ValueCallback<String>() {
                                 @Override
                                 public void onReceiveValue(String value) {
@@ -479,8 +484,6 @@ public class ExploreWebActivity extends BRActivity {
                     break;
 
                 case "signTransaction":
-                    Log.d(TAG, "postMessage: signTransaction!");
-
                     final String to = object.getString("to");
 //                    final String gasPrice = object.getString("gasPrice");
 //                    final String gas = object.getString("gas");
