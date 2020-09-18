@@ -65,7 +65,15 @@ public class UriFactory {
     }
 
     public String getAmount() {
-        return getValue("Amount".toLowerCase());
+        String ts = getValue("Amount".toLowerCase());
+        if(ts == null){
+            ts = getValue("value".toLowerCase());
+        }
+
+        if(ts == null){
+            ts = "0";
+        }
+        return ts.toLowerCase();
     }
 
     public String getCoinName() {
@@ -98,8 +106,16 @@ public class UriFactory {
         return getValue("OrderID".toLowerCase());
     }
 
+    public String getHexData() {
+        return getValue("data".toLowerCase());
+    }
+
     public String getReceivingAddress() {
-        return getValue("ReceivingAddress".toLowerCase());
+        String to = getValue("ReceivingAddress".toLowerCase());
+        if(to == null){
+            to = getValue("to".toLowerCase());
+        }
+        return to;
     }
 
     public String getTarget() {

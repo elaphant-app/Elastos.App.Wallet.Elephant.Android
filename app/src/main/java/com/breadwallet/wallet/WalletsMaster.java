@@ -171,7 +171,7 @@ public class WalletsMaster {
             return WalletBchManager.getInstance(app);
         if (iso.equalsIgnoreCase("ETH"))
             return WalletEthManager.getInstance(app);
-        if(iso.equalsIgnoreCase("ELAETHSC") || iso.equalsIgnoreCase("ELA/ETHSC"))
+        if(iso.equalsIgnoreCase("ELAETHSC") || iso.equalsIgnoreCase("ELA/ETHSC") || iso.equalsIgnoreCase("ETHSC"))
             return ElaSideEthereumWalletManager.getInstance(app);
         if (isIsoErc20(app, iso)) {
             return WalletTokenManager.getTokenWalletByIso(app, WalletEthManager.getInstance(app), iso);

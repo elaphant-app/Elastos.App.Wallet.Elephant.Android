@@ -311,38 +311,23 @@ public class BRActivity extends FragmentActivity implements BreadApp.OnAppBackgr
                                 case "multicreate":
                                     UiUtils.startMultiCreateActivity(this, Uri.parse(url));
                                     return;
+
                                 case "identity":
                                 case "ethsign":
                                     UiUtils.startAuthorActivity(this, url);
                                     return;
+
+                                case "calleth":
                                 case "elapay":
                                     UiUtils.startWalletActivity(this, url);
                                     return;
+
                                 case "sign":
                                     UiUtils.startSignActivity(this, url);
                                     return;
                                 case "eladposvote":
                                 case "elacrcvote":
                                     UiUtils.startCrcActivity(this, url);
-                                    return;
-
-                                case "calleth":
-                                    final CryptoRequest request = new CryptoRequest(null,true,"",uri.getReceivingAddress(),new BigDecimal(Long.decode(uri.getAmount())));
-                                    UiUtils.showSendFragmentWithCallback(this, request, new FragmentSendCallback() {
-                                        @Override
-                                        public void onSent(String txid) {
-                                            Log.d(TAG, "onCompleted: 完成了callEth逻辑，跳转到：" + uri.getReturnUrl());
-
-                                            Uri go = Uri.parse(uri.getReturnUrl());
-                                            Intent intent = new Intent(Intent.ACTION_VIEW, go);
-                                            startActivity(intent);
-                                        }
-
-                                        @Override
-                                        public void onCancel() {
-                                            Log.d(TAG, "onCompleted: 取消了callEth逻辑。");
-                                        }
-                                    });
                                     return;
 
                                 default:
