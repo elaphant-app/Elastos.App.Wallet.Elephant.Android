@@ -288,7 +288,7 @@ public class FragmentExplore extends Fragment implements OnStartDragListener, Mi
 //                    }
 //                });
 //            }
-            SharedPreferences sp = getContext().getSharedPreferences("MyPublicPrefsFile", Context.MODE_PRIVATE);
+            SharedPreferences sp = getContext().getSharedPreferences("BrowserPrefs", Context.MODE_PRIVATE);
             Set<String> favorites = sp.getStringSet("favorites", null);
 
             if(favorites != null){
@@ -567,6 +567,7 @@ public class FragmentExplore extends Fragment implements OnStartDragListener, Mi
                     }
 
                     if(isActionUp){
+                        isActionUp = false;
                         go();
                     }
                 }
@@ -722,7 +723,7 @@ public class FragmentExplore extends Fragment implements OnStartDragListener, Mi
                 /////////////////////////////////////
 
                 String tempString;
-                SharedPreferences sp = mActivity.getSharedPreferences("MyPublicPrefsFile", Context.MODE_PRIVATE);
+                SharedPreferences sp = mActivity.getSharedPreferences("BrowserPrefs", Context.MODE_PRIVATE);
                 Set<String> favorites = sp.getStringSet("favorites", new HashSet<String>());
                 String dappUrl = mAboutAppItem.url;
                 if(favorites != null && favorites.size() > 0){

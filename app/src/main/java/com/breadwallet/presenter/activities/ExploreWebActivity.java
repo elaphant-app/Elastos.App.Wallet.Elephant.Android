@@ -191,7 +191,7 @@ public class ExploreWebActivity extends BRActivity {
             public void onClick(View v) {
                 if (isLikeToFavorite != isFavorited) {
                     String tempString;
-                    SharedPreferences sp = getSharedPreferences("MyPublicPrefsFile", Context.MODE_PRIVATE);
+                    SharedPreferences sp = getSharedPreferences("BrowserPrefs", Context.MODE_PRIVATE);
                     Set<String> favorites = sp.getStringSet("favorites", new HashSet<String>());
 
                     if (isLikeToFavorite) {
