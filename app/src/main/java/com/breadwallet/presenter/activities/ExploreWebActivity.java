@@ -152,6 +152,12 @@ public class ExploreWebActivity extends BRActivity {
 
         mLoadingDialog = new LoadingDialog(this, R.style.progressDialog);
         mLoadingDialog.setCanceledOnTouchOutside(false);
+
+        if(WebviewScriptConfig.getInstance(this).network == WebviewScriptConfig.networkConnectByDapp.ethereumSideChain){
+            mSwitchNetwork.setText(R.string.multi_wallet_switch + " - Ethereum");
+        }else{
+            mSwitchNetwork.setText(R.string.multi_wallet_switch + " - ELA Side Chain");
+        }
     }
 
     private void checkFavoriteStatus(String url) {
@@ -288,7 +294,17 @@ public class ExploreWebActivity extends BRActivity {
             @Override
             public void onClick(View v) {
                 mMenuLayout.setVisibility(View.GONE);
-                //
+
+                Context tempContext = ExploreWebActivity.this;
+                if(WebviewScriptConfig.getInstance(tempContext).network == WebviewScriptConfig.networkConnectByDapp.ethereumSideChain){
+                    WebviewScriptConfig.getInstance(tempContext).switchNetwork(WebviewScriptConfig.networkConnectByDapp.ethereum);
+                    Toast.makeText(tempContext, R.string.multi_wallet_switch + " - Ethereum", Toast.LENGTH_SHORT).show();
+                    mSwitchNetwork.setText(R.string.multi_wallet_switch + " - ELA Side Chain");
+                }else{
+                    WebviewScriptConfig.getInstance(tempContext).switchNetwork(WebviewScriptConfig.networkConnectByDapp.ethereumSideChain);
+                    Toast.makeText(tempContext, R.string.multi_wallet_switch + " - ELA Side Chain", Toast.LENGTH_SHORT).show();
+                    mSwitchNetwork.setText(R.string.multi_wallet_switch + " - Ethereum");
+                }
             }
         });
 

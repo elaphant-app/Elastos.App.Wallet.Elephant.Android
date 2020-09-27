@@ -13,6 +13,8 @@ import com.breadwallet.wallet.wallets.side.ElaSideEthereumWalletManager;
 public class WebviewScriptConfig{
     private static WebviewScriptConfig mInstance;
 
+    private Context theContext;
+
     public static enum networkConnectByDapp{ethereum, ethereumSideChain}
 
     //    public static var network:networkConnectByDapp = networkConnectByDapp.ethereum
@@ -28,9 +30,7 @@ public class WebviewScriptConfig{
     public String rpcUrl;
 
     public WebviewScriptConfig(Context context){
-//        address = WalletEthManager.getInstance(context).getAddress();
-//        chainId = 1;
-//        rpcUrl = "https://api-eth.elaphant.app/api/1/eth/wrap";
+        theContext = context;
         address = ElaSideEthereumWalletManager.getInstance(context).getAddress();
         chainId = 1;
         rpcUrl = "https://escrpc.elaphant.app";
@@ -41,5 +41,17 @@ public class WebviewScriptConfig{
             mInstance = new WebviewScriptConfig(context);
         }
         return mInstance;
+    }
+
+    public void switchNetwork(networkConnectByDapp network){
+        if(network == networkConnectByDapp.ethereumSideChain){
+            address = ElaSideEthereumWalletManager.getInstance(theContext).getAddress();
+            chainId = 1;
+            rpcUrl = "https://escrpc.elaphant.app";
+        }else{
+            address = WalletEthManager.getInstance(theContext).getAddress();
+            chainId = 1;
+            rpcUrl = "https://api-eth.elaphant.app/api/1/eth/wrap";
+        }
     }
 }

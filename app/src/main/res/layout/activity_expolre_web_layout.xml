@@ -102,36 +102,6 @@
             android:gravity="bottom"
             android:orientation="vertical">
 
-            <View
-                android:id="@+id/explore_horizontal_line"
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#F7F8FB" />
-
-            <View
-                android:id="@+id/explore_horizontal_line3"
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#F7F8FB" />
-
-            <View
-                android:id="@+id/explore_horizontal_line2"
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#F7F8FB" />
-
-            <View
-                android:id="@+id/explore_horizontal_line4"
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#F7F8FB" />
-
-            <View
-                android:id="@+id/explore_horizontal_line5"
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#F7F8FB" />
-
             <com.breadwallet.presenter.customviews.BaseTextView
                 android:id="@+id/explore_web_share"
                 android:layout_width="match_parent"
@@ -140,6 +110,12 @@
                 android:gravity="center"
                 android:text="@string/Receive.share"
                 android:textColor="@color/black_333333" />
+
+            <View
+                android:id="@+id/explore_horizontal_line"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#F7F8FB" />
 
             <com.breadwallet.presenter.customviews.BaseTextView
                 android:id="@+id/explore_web_copyurl"
@@ -150,6 +126,12 @@
                 android:text="@android:string/copyUrl"
                 android:textColor="@color/black_333333" />
 
+            <View
+                android:id="@+id/explore_horizontal_line3"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#F7F8FB" />
+
             <com.breadwallet.presenter.customviews.BaseTextView
                 android:id="@+id/explore_web_reload"
                 android:layout_width="match_parent"
@@ -158,6 +140,12 @@
                 android:gravity="center"
                 android:text="@string/reload"
                 android:textColor="@color/black_333333" />
+
+            <View
+                android:id="@+id/explore_horizontal_line2"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#F7F8FB" />
 
             <com.breadwallet.presenter.customviews.BaseTextView
                 android:id="@+id/explore_web_switch"
@@ -168,6 +156,12 @@
                 android:text="@string/multi_wallet_switch"
                 android:textColor="@color/black_333333" />
 
+            <View
+                android:id="@+id/explore_horizontal_line4"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#F7F8FB" />
+
             <com.breadwallet.presenter.customviews.BaseTextView
                 android:id="@+id/explore_web_bookmark"
                 android:layout_width="match_parent"
@@ -176,6 +170,12 @@
                 android:gravity="center"
                 android:text="@string/bookmarkIt"
                 android:textColor="@color/black_333333" />
+
+            <View
+                android:id="@+id/explore_horizontal_line5"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#F7F8FB" />
 
             <com.breadwallet.presenter.customviews.BaseTextView
                 android:id="@+id/explore_web_cancle"
