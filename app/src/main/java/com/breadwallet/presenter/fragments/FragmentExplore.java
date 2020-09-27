@@ -720,24 +720,25 @@ public class FragmentExplore extends Fragment implements OnStartDragListener, Mi
 
                 if (null != mAboutShowListener) mAboutShowListener.show();
 //                UiUtils.startMiniAppAboutActivity(getContext(), mAboutAppItem.appId);
-                /////////////////////////////////////
 
-                String tempString;
-                SharedPreferences sp = mActivity.getSharedPreferences("BrowserPrefs", Context.MODE_PRIVATE);
-                Set<String> favorites = sp.getStringSet("favorites", new HashSet<String>());
-                String dappUrl = mAboutAppItem.url;
-                if(favorites != null && favorites.size() > 0){
-                    for (String favorite : favorites) {
-                        if (dappUrl.contains(favorite.split("<\\|>")[1])) {
-                            favorites.remove(favorite);
-                            mItems.remove(mAboutAppItem);
-                            break;
+                if (null != mAboutAppItem) {
+                    String tempString;
+                    SharedPreferences sp = mActivity.getSharedPreferences("BrowserPrefs", Context.MODE_PRIVATE);
+                    Set<String> favorites = sp.getStringSet("favorites", new HashSet<String>());
+                    String dappUrl = mAboutAppItem.url;
+                    if(favorites != null && favorites.size() > 0){
+                        for (String favorite : favorites) {
+                            if (dappUrl.contains(favorite.split("<\\|>")[1])) {
+                                favorites.remove(favorite);
+                                mItems.remove(mAboutAppItem);
+                                break;
+                            }
                         }
                     }
-                }
 
-                SharedPreferences.Editor editor = sp.edit();
-                editor.putStringSet("favorites",favorites).apply();
+                    SharedPreferences.Editor editor = sp.edit();
+                    editor.putStringSet("favorites",favorites).apply();
+                }
             }
         });
 

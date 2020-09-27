@@ -162,7 +162,8 @@ public class ExploreWebActivity extends BRActivity {
             String[] favoriteData;
             for (String favorite : favorites) {
                 favoriteData = favorite.split("<\\|>");
-                if (url.contains(favoriteData[1])) {
+                String favoritedURL = favoriteData[1];
+                if (url.contains(favoritedURL) || favoritedURL.contains(url)) {
                     isFavorited = true;
                     isLikeToFavorite = true;
                     mBookmark.setText(R.string.disFavoriteIt);
