@@ -483,11 +483,11 @@ public class FragmentExplore extends Fragment implements OnStartDragListener, Mi
     public void onItemClick(MyAppItem item, int position) {
         String url = item.url;
         if (!StringUtil.isNullOrEmpty(url)) {
-            if (url.contains("?")) {
-                url = url + "&browser=elaphant";
-            } else {
-                url = url + "?browser=elaphant";
-            }
+//            if (url.contains("?")) {
+//                url = url + "&browser=elaphant";
+//            } else {
+//                url = url + "?browser=elaphant";
+//            }
             //UiUtils.startWebviewActivity(getActivity(), url, item.appId);
             UiUtils.startWebviewActivity(getActivity(), url);
 //

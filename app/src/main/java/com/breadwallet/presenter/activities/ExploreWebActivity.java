@@ -100,7 +100,14 @@ public class ExploreWebActivity extends BRActivity {
     protected void onStart() {
         super.onStart();
 
-        webView.loadUrl(webURL);
+        String url = webURL;
+        if (url.contains("?")) {
+            url = url + "&browser=elaphant";
+        } else {
+            url = url + "?browser=elaphant";
+        }
+        webView.loadUrl(url);
+
         checkFavoriteStatus(webURL);
     }
 
@@ -154,9 +161,9 @@ public class ExploreWebActivity extends BRActivity {
         mLoadingDialog.setCanceledOnTouchOutside(false);
 
         if(WebviewScriptConfig.getInstance(this).network == WebviewScriptConfig.networkConnectByDapp.ethereumSideChain){
-            mSwitchNetwork.setText(R.string.multi_wallet_switch + " - Ethereum");
+            mSwitchNetwork.setText(R.string.multi_wallet_switch + ": Ethereum");
         }else{
-            mSwitchNetwork.setText(R.string.multi_wallet_switch + " - ELA Side Chain");
+            mSwitchNetwork.setText(R.string.multi_wallet_switch + ": ELA Side Chain");
         }
     }
 
@@ -299,11 +306,11 @@ public class ExploreWebActivity extends BRActivity {
                 if(WebviewScriptConfig.getInstance(tempContext).network == WebviewScriptConfig.networkConnectByDapp.ethereumSideChain){
                     WebviewScriptConfig.getInstance(tempContext).switchNetwork(WebviewScriptConfig.networkConnectByDapp.ethereum);
                     Toast.makeText(tempContext, R.string.multi_wallet_switch + " - Ethereum", Toast.LENGTH_SHORT).show();
-                    mSwitchNetwork.setText(R.string.multi_wallet_switch + " - ELA Side Chain");
+                    mSwitchNetwork.setText(R.string.multi_wallet_switch + ": ELA Side Chain");
                 }else{
                     WebviewScriptConfig.getInstance(tempContext).switchNetwork(WebviewScriptConfig.networkConnectByDapp.ethereumSideChain);
                     Toast.makeText(tempContext, R.string.multi_wallet_switch + " - ELA Side Chain", Toast.LENGTH_SHORT).show();
-                    mSwitchNetwork.setText(R.string.multi_wallet_switch + " - Ethereum");
+                    mSwitchNetwork.setText(R.string.multi_wallet_switch + ": Ethereum");
                 }
             }
         });
