@@ -35,7 +35,7 @@
   <!-- Error alert title -->
   <string name="Alert.error">Ошибка</string>
   <!-- Keystore error -->
-  <string name="Alert.keystore.generic.android">Имеется проблема с хранилищем ключей в вашей ОС Android, обратитесь по адресу: support@Elephantwallet.com</string>
+  <string name="Alert.keystore.generic.android">Имеется проблема с хранилищем ключей в вашей ОС Android, обратитесь по адресу: support@elaphant.app</string>
   <!-- KeyStore error, keys are invalidated -->
   <string name="Alert.keystore.invalidated.android">Ваши зашифрованные данные приложения Elephant были недавно аннулированы, так как была отключена блокировка экрана вашего устройства Android.</string>
   <!-- Keystore error title -->
@@ -503,7 +503,7 @@
   <!-- Send money amount label -->
   <string name="Send.amountLabel">Сумма</string>
   <!-- Balance: $4.00 -->
-  <string name="Send.balance">Баланс: %1$s</string>
+  <string name="Send.balance">Баланс %1$s</string>
   <!-- Instructions how to allow the camera access for the app -->
   <string name="Send.cameraUnavailabeMessage.android">Разрешить доступ к камере в: \"Настройки\" &gt; \"Приложения\" &gt; \"Elephant\" &gt; \"Разрешения\"</string>
   <!-- Permission required to access camera -->
@@ -523,7 +523,7 @@
   <!-- "(you) can't send (to your)self" -->
   <string name="Send.ethSendSelf">Не удается отправить себе.</string>
   <!-- Network Fee: $0.01 -->
-  <string name="Send.fee">Комиссия сети: %1$s</string>
+  <string name="Send.fee">Комиссия сети %1$s</string>
   <!-- Payee identity not certified alert title. -->
   <string name="Send.identityNotCertified">Личность получателя платежа не сертифицирована.</string>
   <!-- Insufficient funds error -->

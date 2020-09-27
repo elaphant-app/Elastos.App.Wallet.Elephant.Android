@@ -12,6 +12,7 @@ import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
 import android.support.constraint.ConstraintSet;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.Toolbar;
 import android.text.format.DateUtils;
 import android.transition.TransitionManager;
@@ -52,14 +53,16 @@ import com.breadwallet.wallet.abstracts.OnTxListModified;
 import com.breadwallet.wallet.abstracts.SyncListener;
 import com.breadwallet.wallet.util.CryptoUriParser;
 import com.breadwallet.wallet.wallets.bitcoin.BaseBitcoinWalletManager;
+import com.breadwallet.wallet.wallets.ela.ElaDataSource;
 import com.breadwallet.wallet.wallets.ela.WalletElaManager;
 import com.breadwallet.wallet.wallets.ethereum.WalletEthManager;
+import com.breadwallet.wallet.wallets.ioex.WalletIoexManager;
+import com.breadwallet.wallet.wallets.side.ElaSideEthereumWalletManager;
+import com.elastos.jni.AuthorizeManager;
+import com.elastos.jni.Constants;
+import com.elastos.jni.UriFactory;
 import com.platform.HTTPServer;
-import com.platform.tools.BRBitId;
-
-import org.wallet.library.AuthorizeManager;
-import org.wallet.library.Constants;
-import org.wallet.library.entity.UriFactory;
+import com.platform.tools.KVStoreManager;
 
 import java.math.BigDecimal;
 import java.text.NumberFormat;
@@ -112,7 +115,12 @@ public class WalletActivity extends BRActivity implements InternetManager.Connec
 
     private String mUri;
 
+    private SwipeRefreshLayout mSwipeRefreshLayout;
+
     public static String mCallbackUrl;
+    public static String mReturnUrl;
+    public static String mAppId;
+    public static String mOrderId;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -130,9 +138,35 @@ public class WalletActivity extends BRActivity implements InternetManager.Connec
             if (!StringUtil.isNullOrEmpty(mUri)) {
                 UriFactory factory = new UriFactory();
                 factory.parse(mUri);
-                BRSharedPrefs.putCurrentWalletIso(BreadApp.mContext, factory.getCoinName());
+                String coinName = factory.getCoinName();
+                if(StringUtil.isNullOrEmpty(coinName)) {
+                    Toast.makeText(this, getString(R.string.elapay_request_params_error), Toast.LENGTH_SHORT).show();
+                    finish();
+                    return;
+                }
+                if(coinName.equalsIgnoreCase("USDT")) {
+                    Toast.makeText(this, getString(R.string.elapay_request_params_error), Toast.LENGTH_SHORT).show();
+                    finish();
+                    return;
+                }
+                if(coinName.equalsIgnoreCase("USDT-ERC20")) {
+                    coinName = "USDT";
+                }
+                BaseWalletManager wm = WalletsMaster.getInstance(this).getWalletByIso(this, coinName);
+                if(null == wm) {
+                    Toast.makeText(this, getString(R.string.elapay_request_params_error), Toast.LENGTH_SHORT).show();
+                    finish();
+                    return;
+                }
+
+                boolean isHidden = KVStoreManager.getInstance().getTokenListMetaData(this).isCurrencyHidden(coinName);
+                if(isHidden) {
+                    Toast.makeText(this, getString(R.string.elapay_request_params_error), Toast.LENGTH_SHORT).show();
+                    finish();
+                    return;
+                }
+                BRSharedPrefs.putCurrentWalletIso(BreadApp.mContext, coinName);
             }
-            Log.i("author_test", "walletActivity1 mUri:"+mUri);
         }
 
         BRSharedPrefs.putIsNewWallet(this, false);
@@ -154,6 +188,7 @@ public class WalletActivity extends BRActivity implements InternetManager.Connec
         mSyncStatusLabel = findViewById(R.id.sync_status_label);
         mProgressLabel = findViewById(R.id.syncing_label);
         mWalletFooter = findViewById(R.id.bottom_toolbar_layout1);
+        mSwipeRefreshLayout = findViewById(R.id.recycler_layout);
 
         startSyncLoggerIfNeeded();
 
@@ -162,6 +197,18 @@ public class WalletActivity extends BRActivity implements InternetManager.Connec
         mBalanceSecondary.setTextSize(TypedValue.COMPLEX_UNIT_SP, SECONDARY_TEXT_SIZE);
 
         mSendButton.setHasShadow(false);
+        mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        mSwipeRefreshLayout.setRefreshing(false);
+                    }
+                }, 5*1000);
+            }
+        });
+
         mSendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -233,6 +280,7 @@ public class WalletActivity extends BRActivity implements InternetManager.Connec
                 WalletsMaster.getInstance(app).refreshBalances(app);
                 WalletsMaster.getInstance(app).getCurrentWallet(app).refreshAddress(app);
                 WalletElaManager.getInstance(app).updateTxHistory();
+                WalletIoexManager.getInstance(app).updateTxHistory();
             }
         });
 
@@ -248,6 +296,8 @@ public class WalletActivity extends BRActivity implements InternetManager.Connec
         setPriceTags(cryptoPreferred, false);
 
     }
+
+
 
 
     private void startSyncLoggerIfNeeded() {
@@ -270,7 +320,7 @@ public class WalletActivity extends BRActivity implements InternetManager.Connec
             if(!StringUtil.isNullOrEmpty(action) && action.equals(Intent.ACTION_VIEW)) {
                 Uri uri = intent.getData();
                 mUri = uri.toString();
-                sendRedPackage();
+                elaPayScheme();
             }
         }
     }
@@ -286,10 +336,10 @@ public class WalletActivity extends BRActivity implements InternetManager.Connec
         String fiatBalance = CurrencyUtils.getFormattedAmount(this, BRSharedPrefs.getPreferredFiatIso(this), wm.getFiatBalance(this));
         String cryptoBalance = CurrencyUtils.getFormattedAmount(this, wm.getIso(), wm.getCachedBalance(this), wm.getUiConfiguration().getMaxDecimalPlacesForUi());
 
-        mCurrencyTitle.setText(wm.getIso());
-        mCurrencyPriceUsd.setText(String.format("%s / %s", fiatExchangeRate, wm.getIso()));
+        mCurrencyTitle.setText(wm.getIso().equalsIgnoreCase("ELAETHSC")?"ELA/ETHSC":wm.getIso());
+        mCurrencyPriceUsd.setText(String.format("%s / %s", fiatExchangeRate, wm.getIso().equalsIgnoreCase("ELAETHSC")?"ELA":wm.getIso()));
         mBalancePrimary.setText(fiatBalance);
-        mBalanceSecondary.setText(cryptoBalance.replace(wm.getIso(), ""));
+        mBalanceSecondary.setText(cryptoBalance.replace(wm.getIso().equalsIgnoreCase("ELAETHSC")?"ELA":wm.getIso(), ""));
 
         BRExecutor.getInstance().forLightWeightBackgroundTasks().execute(new Runnable() {
             @Override
@@ -368,6 +418,7 @@ public class WalletActivity extends BRActivity implements InternetManager.Connec
             @Override
             public void run() {
                 WalletEthManager.getInstance(WalletActivity.this).estimateGasPrice();
+                ElaSideEthereumWalletManager.getInstance(WalletActivity.this).estimateGasPrice();
                 wallet.refreshCachedBalance(WalletActivity.this);
                 BRExecutor.getInstance().forMainThreadTasks().execute(new Runnable() {
                     @Override
@@ -394,15 +445,15 @@ public class WalletActivity extends BRActivity implements InternetManager.Connec
 
         DeepLinkingManager.handleUrlClick(this, getIntent());
 
-        sendRedPackage();
+        elaPayScheme();
     }
 
-    private void sendRedPackage(){
+    private void elaPayScheme(){
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
                 if(StringUtil.isNullOrEmpty(mUri)) return;
-                FragmentSend.mFromRedPackage = true;
+                FragmentSend.mFromElapay = true;
                 UiUtils.showSendFragment(WalletActivity.this, null);
                 BRExecutor.getInstance().forLightWeightBackgroundTasks().execute(new Runnable() {
                     @Override
@@ -412,18 +463,25 @@ public class WalletActivity extends BRActivity implements InternetManager.Connec
                         factory.parse(mUri);
                         mUri = null;
                         String did = factory.getDID();
+                        String appName = factory.getAppName();
                         String appId = factory.getAppID();
-                        String signed = factory.getSignature();
                         String PK = factory.getPublicKey();
-                        String des = factory.getDescription();
+                        String des = StringUtil.isNullOrEmpty(factory.getOrderID())?  "" : "OrderID="+factory.getOrderID();
                         mCallbackUrl = factory.getCallbackUrl();
-                        Log.i(TAG, "mCallbackUrl:"+mCallbackUrl);
-                        Log.i(TAG, "walletActivity1 did:"+did+" appId:"+appId+" signed:"+signed+" PK: "+PK);
-                        boolean isValide = AuthorizeManager.verify(WalletActivity.this, did, PK,appId, signed);
-                        Log.i(TAG, "walletActivity1 isValide: "+isValide);
+                        mReturnUrl = factory.getReturnUrl();
+                        mAppId = factory.getAppID();
+                        mOrderId = factory.getOrderID();
+                        boolean isValide = AuthorizeManager.verify(WalletActivity.this, did, PK, appName, appId);
                         if(!isValide) return;
-                        BaseWalletManager walletManager = WalletsMaster.getInstance(WalletActivity.this).getCurrentWallet(WalletActivity.this);
-                        String result = CryptoUriParser.createElapayUrl(walletManager, factory.getAmount(), factory.getPaymentAddress(), des);
+                        BaseWalletManager wm = WalletsMaster.getInstance(WalletActivity.this).getCurrentWallet(WalletActivity.this);
+                        String result = CryptoUriParser.createElapayUrl(wm, factory.getAmount(), factory.getReceivingAddress(), des);
+//                        if(wm.getIso().equalsIgnoreCase("ELA")) {
+//                            result = CryptoUriParser.createElapayUrl(wm, factory.getAmount(), factory.getReceivingAddress(), des);
+//                        } else {
+//                            result = CryptoUriParser.createCryptoUrl(WalletActivity.this, wm,
+//                                    factory.getReceivingAddress(),
+//                                    new BigDecimal(factory.getAmount()), null, null, null).toString();
+//                        }
                         if (CryptoUriParser.isCryptoUrl(WalletActivity.this, result)) {
                             CryptoUriParser.processRequest(WalletActivity.this, result,
                                     WalletsMaster.getInstance(WalletActivity.this).getCurrentWallet(WalletActivity.this));
@@ -472,6 +530,7 @@ public class WalletActivity extends BRActivity implements InternetManager.Connec
     @Override
     public void onConnectionChanged(boolean isConnected) {
         Log.d(TAG, "onConnectionChanged: isConnected: " + isConnected);
+//        Toast.makeText(this, getString(R.string.net_has_disconnect), Toast.LENGTH_SHORT).show();
         if (isConnected) {
             if (mBarFlipper != null && mBarFlipper.getDisplayedChild() == 2) {
                 mBarFlipper.setDisplayedChild(0);

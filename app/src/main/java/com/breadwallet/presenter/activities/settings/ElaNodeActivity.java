@@ -1,11 +1,14 @@
 package com.breadwallet.presenter.activities.settings;
 
+import android.accounts.NetworkErrorException;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Typeface;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Message;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.util.TypedValue;
@@ -17,19 +20,31 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.SimpleAdapter;
 import android.widget.TextView;
 
+import com.breadwallet.BreadApp;
 import com.breadwallet.R;
 import com.breadwallet.presenter.activities.util.BRActivity;
 import com.breadwallet.presenter.customviews.BRButton;
 import com.breadwallet.presenter.customviews.BaseTextView;
 import com.breadwallet.tools.manager.BRSharedPrefs;
+import com.breadwallet.tools.threads.executor.BRExecutor;
 import com.breadwallet.tools.util.StringUtil;
 import com.breadwallet.tools.util.Utils;
 import com.breadwallet.wallet.wallets.ela.ElaDataSource;
+import com.breadwallet.wallet.wallets.ela.ElaDataUtils;
+import com.breadwallet.wallet.wallets.ela.WalletElaManager;
+import com.platform.APIClient;
 
+import org.json.JSONObject;
+
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.Iterator;
+import java.util.Map;
+
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class ElaNodeActivity extends BRActivity {
 
@@ -41,6 +56,10 @@ public class ElaNodeActivity extends BRActivity {
     BRButton mSelectBtn;
     View mListBgView;
     ListView mNodeLv;
+    private static final int CONNECT_SUCCESS = 0x01;
+    private static final int CONNECT_FAILED = 0x02;
+
+    //https://api-wallet-ela-testnet.elastos.org/api/1/currHeight
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -52,7 +71,7 @@ public class ElaNodeActivity extends BRActivity {
         mSelectBtn = findViewById(R.id.node_list_btn);
         mNodeLv = findViewById(R.id.node_listview);
         mListBgView = findViewById(R.id.list_bg);
-        mCurrentNode.setText(BRSharedPrefs.getElaNode(this, ElaDataSource.ELA_NODE_KEY));
+        mCurrentNode.setText(BRSharedPrefs.getElaNode(this, ElaDataUtils.ELA_NODE_KEY));
         mConnectStatus.setText(getString(R.string.NodeSelector_connected));
 
         mSwitchBtn.setOnClickListener(new View.OnClickListener() {
@@ -67,7 +86,7 @@ public class ElaNodeActivity extends BRActivity {
                 showList();
             }
         });
-        final String[] nodes = {"api-wallet-ela.elastos.org", /*"api-wallet-ela-testnet.elastos.org", */"default node"};
+        final String[] nodes = {"node1.elaphant.app", /*"api-wallet-ela-testnet.elastos.org", */"default node"};
         ArrayAdapter adapter = new ArrayAdapter(this, R.layout.node_item_layout, nodes);
         mNodeLv.setAdapter(adapter);
         mNodeLv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -75,13 +94,11 @@ public class ElaNodeActivity extends BRActivity {
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 if(i < nodes.length-1){
                     Log.i(TAG, "item:"+i);
-                    String oldNode = BRSharedPrefs.getElaNode(ElaNodeActivity.this, ElaDataSource.ELA_NODE_KEY);
                     String input = nodes[i];
-                    if(!StringUtil.isNullOrEmpty(input) && !input.equals(oldNode)) {
-                        BRSharedPrefs.putElaNode(ElaNodeActivity.this, ElaDataSource.ELA_NODE_KEY, input.trim());
-                        mCurrentNode.setText(input);
-                        wipeData();
+                    if(!StringUtil.isNullOrEmpty(input)) {
+                        testConnect(input);
                     }
+//                    testConnect(input);
                 }
                 hideList();
             }
@@ -92,6 +109,63 @@ public class ElaNodeActivity extends BRActivity {
                 finish();
             }
         });
+    }
+
+    private void testConnect(final String node){
+        if(StringUtil.isNullOrEmpty(node)) return;
+        mConnectStatus.setText(getString(R.string.NodeSelector_connecting));
+        final String url = "https://"+node+"/api/1/currHeight";
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                String ret = null;
+                try {
+                     ret = urlGET(url);
+                     //{"result":312513,"status":200}
+                    JSONObject object = new JSONObject(ret);
+                    long height = object.getLong("result");
+                    int status = object.getInt("status");
+                     if(height>0 && status==200) {
+                         runOnUiThread(new Runnable() {
+                             @Override
+                             public void run() {
+                                 changeConnectStatus(node, true);
+                             }
+                         });
+                     } else {
+                         runOnUiThread(new Runnable() {
+                             @Override
+                             public void run() {
+                                 changeConnectStatus(node, false);
+                             }
+                         });
+                     }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            changeConnectStatus(node, false);
+                        }
+                    });
+                }
+            }
+        }).start();
+    }
+
+    private void changeConnectStatus(String node, boolean success){
+        if (success) {
+            BRSharedPrefs.putElaNode(ElaNodeActivity.this, ElaDataUtils.ELA_NODE_KEY, node.trim());
+            wipeData();
+            BRExecutor.getInstance().forLightWeightBackgroundTasks().execute(new Runnable() {
+                @Override
+                public void run() {
+                    WalletElaManager.getInstance(ElaNodeActivity.this).updateFee(ElaNodeActivity.this);
+                }
+            });
+        }
+        mCurrentNode.setText(node);
+        mConnectStatus.setText(success?getString(R.string.NodeSelector_connected) : getString(R.string.NodeSelector_connect_error));
     }
 
     private void hideList(){
@@ -148,13 +222,16 @@ public class ElaNodeActivity extends BRActivity {
         alertDialog.setPositiveButton(getString(R.string.Button_ok),
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
-                        String oldNode = BRSharedPrefs.getElaNode(ElaNodeActivity.this, ElaDataSource.ELA_NODE_KEY);
-                        String input = inputEdit.getText().toString();
-                        if(!StringUtil.isNullOrEmpty(input) && !input.equals(oldNode)) {
-                            BRSharedPrefs.putElaNode(ElaNodeActivity.this, ElaDataSource.ELA_NODE_KEY, input.trim());
+                        String input = inputEdit.getText().toString().trim();
+                        if(!StringUtil.isNullOrEmpty(input)) {
+                            if(input.contains("http") || input.contains("https")){
+                                Uri uri = Uri.parse(input);
+                                input = uri.getHost();
+                            }
                             mCurrentNode.setText(input);
-                            wipeData();
+                            testConnect(input);
                         }
+//                        testConnect(input);
                     }
                 });
         alertDialog.show();
@@ -173,5 +250,30 @@ public class ElaNodeActivity extends BRActivity {
     private void wipeData(){
         BRSharedPrefs.putCachedBalance(this, "ELA",  new BigDecimal(0));
         ElaDataSource.getInstance(this).deleteAllTransactions();
+    }
+
+    public String urlGET(String myURL) throws IOException {
+        Map<String, String> headers = BreadApp.getBreadHeaders();
+
+        Request.Builder builder = new Request.Builder()
+                .url(myURL)
+                .header("Content-Type", "application/json")
+                .header("Accept", "application/json")
+                .header("User-agent", Utils.getAgentString(this, "android/HttpURLConnection"))
+                .get();
+        Iterator it = headers.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry pair = (Map.Entry) it.next();
+            builder.header((String) pair.getKey(), (String) pair.getValue());
+        }
+
+        Request request = builder.build();
+        Response response = APIClient.testNodeClient.newCall(request).execute();
+
+        if (response.isSuccessful()) {
+            return response.body().string();
+        } else {
+            throw new IOException("Unexpected code " + response);
+        }
     }
 }

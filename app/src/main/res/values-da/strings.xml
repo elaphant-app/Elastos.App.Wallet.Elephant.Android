@@ -35,7 +35,7 @@
   <!-- Error alert title -->
   <string name="Alert.error">Fejl</string>
   <!-- Keystore error -->
-  <string name="Alert.keystore.generic.android">Der er et problem med din Android OS keystore, kontakt venligst support@Elephantwallet.com</string>
+  <string name="Alert.keystore.generic.android">Der er et problem med din Android OS keystore, kontakt venligst support@elaphant.app</string>
   <!-- KeyStore error, keys are invalidated -->
   <string name="Alert.keystore.invalidated.android">Dine Elephant-krypterede data blev for nyligt ugyldiggjort, eftersom din Android skærmlås blev deaktiveret.</string>
   <!-- Keystore error title -->
@@ -504,7 +504,7 @@
   <!-- Send money amount label -->
   <string name="Send.amountLabel">Beløb</string>
   <!-- Balance: $4.00 -->
-  <string name="Send.balance">Balance: %1$s</string>
+  <string name="Send.balance">Balance %1$s</string>
   <!-- Instructions how to allow the camera access for the app -->
   <string name="Send.cameraUnavailabeMessage.android">Tillad adgang under \"Indstillinger\" &gt; \"Apps\" &gt; \"Elephant\" &gt; \"Tilladelser\"</string>
   <!-- Permission required to access camera -->
@@ -524,7 +524,7 @@
   <!-- "(you) can't send (to your)self" -->
   <string name="Send.ethSendSelf">Kan ikke sende til dig selv.</string>
   <!-- Network Fee: $0.01 -->
-  <string name="Send.fee">Netværksafgift: %1$s</string>
+  <string name="Send.fee">Netværksafgift %1$s</string>
   <!-- Payee identity not certified alert title. -->
   <string name="Send.identityNotCertified">Betalingsmodtagerens identitet er ikke bekræftet.</string>
   <!-- Insufficient funds error -->
@@ -734,7 +734,7 @@
   <!-- sending to <address> -->
   <string name="Transaction.sendingTo">sender til %1$s</string>
   <!-- sent to <address> -->
-  <string name="Transaction.sentTo">sendt til %1$s</string>
+  <string name="Transaction.sentTo">sendt til</string>
   <!-- eg. Starting balance: $50.00 -->
   <string name="Transaction.starting">Startbalance: %1$s</string>
   <!-- e.g. "[The money you paid was a] Fee for token transfer: Elephant" (Elephant is the token that was transfered) -->

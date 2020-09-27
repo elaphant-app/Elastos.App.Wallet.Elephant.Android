@@ -1,17 +1,17 @@
 apply plugin: 'com.android.application'
-apply plugin: 'io.fabric'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion = 27
-    buildToolsVersion = '27.0.3'
+    compileSdkVersion = 28
 
     defaultConfig {
         testInstrumentationRunner = 'android.support.test.runner.AndroidJUnitRunner'
         applicationId = 'com.elastos.wallet'
         minSdkVersion 23
-        targetSdkVersion 27
-        versionCode 27
-        versionName "1.2.1"
+        targetSdkVersion 28
+        versionCode 87
+        versionName "1.99.1"
         multiDexEnabled true
 
         // Similar to other properties in the defaultConfig block,
@@ -20,7 +20,7 @@ android {
         ndk {
             // Specifies the ABI configurations of your native
             // libraries Gradle should build and package with your APK.
-            abiFilters 'x86', 'x86_64', 'armeabi-v7a'
+            abiFilters 'x86', 'x86_64', 'armeabi-v7a', 'arm64-v8a'
             //, 'armeabi' (not supported by NDK 17.0.4754217)
         }
         externalNativeBuild {
@@ -55,7 +55,6 @@ android {
 
     productFlavors {
         ela {
-            applicationId = "com.elastos.wallet"
             dimension "mode"
             resValue "string", "app_name", "Elephant"
             buildConfigField "boolean", "BITCOIN_TESTNET", "false"
@@ -63,29 +62,7 @@ android {
             buildConfigField "boolean", "RED_PACKAGE_TEST", "false"
             buildConfigField "String", "API_KEY", "\"F4A52C81AD70EDF65094B43704BE7718F53ECFCA0DF905FB1B8181415CA174A5\""
             buildConfigField "String", "APP_ID", "\"xxxxxxxxxxxxxxxxxxx\""
-            buildConfigField "String", "CAN_UPLOAD", "\"nickname\""
-
-            externalNativeBuild {
-                cmake {
-                    // When you specify a version of CMake, as shown below,
-                    // the Android plugin searches for its binary within your
-                    // PATH environmental variable.
-                    cFlags "-DBITCOIN_TESTNET=0"
-                    targets "core"
-                }
-            }
-        }
-
-        elaUpgradeTest {
-            applicationId = "com.elastos.wallet"
-            dimension "mode"
-            resValue "string", "app_name", "Elephant"
-            buildConfigField "boolean", "BITCOIN_TESTNET", "false"
-            buildConfigField "boolean", "UPGRADE_TESTNET", "true"
-            buildConfigField "boolean", "RED_PACKAGE_TEST", "true"
-            buildConfigField "String", "API_KEY", "\"F4A52C81AD70EDF65094B43704BE7718F53ECFCA0DF905FB1B8181415CA174A5\""
-            buildConfigField "String", "APP_ID", "\"xxxxxxxxxxxxxxxxxxxxx\""
-            buildConfigField "String", "CAN_UPLOAD", "\"nickname\""
+            buildConfigField "String", "CAN_UPLOAD", "\"\""
 
             externalNativeBuild {
                 cmake {
@@ -99,7 +76,6 @@ android {
         }
 
         elaTestnet {
-            applicationId = "com.elastos.wallet"
             dimension "mode"
             resValue "string", "app_name", "Elephant"
             buildConfigField "boolean", "BITCOIN_TESTNET", "true"
@@ -107,7 +83,7 @@ android {
             buildConfigField "boolean", "RED_PACKAGE_TEST", "true"
             buildConfigField "String", "API_KEY", "\"F4A52C81AD70EDF65094B43704BE7718F53ECFCA0DF905FB1B8181415CA174A5\""
             buildConfigField "String", "APP_ID", "\"xxxxxxxxxxxxxxxxxxxxxxxxxxx\""
-            buildConfigField "String", "CAN_UPLOAD", "\"nickname\""
+            buildConfigField "String", "CAN_UPLOAD", "\"\""
 
             externalNativeBuild {
                 cmake {
@@ -152,6 +128,18 @@ android {
             minifyEnabled = false
             debuggable = false
 
+            buildConfigField "String", "ALI_AR_APPKEY", "${ali_android_appKey}"
+            buildConfigField "String", "ALI_AR_APPSECRET", "${ali_android_appSecret}"
+            buildConfigField "String", "ALI_AR_ACCESSID", "${ali_android_accessId}"
+            buildConfigField "String", "ALI_AR_ACCESSKEY", "${ali_android_accessSecret}"
+
+            buildConfigField "String", "ALI_IOS_ENV", "${ali_ios_env}"
+            buildConfigField "String", "ALI_IOS_APPKEY", "${ali_ios_appKey}"
+            buildConfigField "String", "ALI_IOS_ACCESSID", "${ali_ios_accessId}"
+            buildConfigField "String", "ALI_IOS_ACCESSKEY", "${ali_ios_accessSecret}"
+
+//            manifestPlaceholders += [aliAppKey:"${ali_android_appKey}", aliAppSecret:"${ali_android_appKey}"]
+
             ndk {
                 minifyEnabled = false
                 debuggable = false
@@ -161,13 +149,27 @@ android {
             debuggable = true
             jniDebuggable = true
             minifyEnabled = false
+
+            buildConfigField "String", "ALI_AR_APPKEY", "${ali_android_dev_appKey}"
+            buildConfigField "String", "ALI_AR_APPSECRET", "${ali_android_dev_appSecret}"
+            buildConfigField "String", "ALI_AR_ACCESSID", "${ali_android_dev_accessId}"
+            buildConfigField "String", "ALI_AR_ACCESSKEY", "${ali_android_dev_accessSecret}"
+
+            buildConfigField "String", "ALI_IOS_ENV", "${ali_ios_dev_env}"
+            buildConfigField "String", "ALI_IOS_APPKEY", "${ali_ios_dev_appKey}"
+            buildConfigField "String", "ALI_IOS_ACCESSID", "${ali_ios_dev_accessId}"
+            buildConfigField "String", "ALI_IOS_ACCESSKEY", "${ali_ios_dev_accessSecret}"
+
             ext.enableCrashlytics = false
             ext.alwaysUpdateBuildId = false
+
             externalNativeBuild {
                 cmake {
                     cFlags "-DBITCOIN_DEBUG=1"
                 }
             }
+
+//            manifestPlaceholders += [aliAppKey:"${ali_android_dev_appKey}", aliAppSecret:"${ali_android_dev_appSecret}"]
 
             ndk {
                 minifyEnabled = false
@@ -190,6 +192,11 @@ repositories {
 }
 
 dependencies {
+
+    implementation fileTree(dir: 'libs', include: ['*.aar'])
+
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.1.3-2"
+
     implementation 'commons-io:commons-io:2.4'
     implementation 'org.eclipse.jetty:jetty-webapp:9.2.19.v20160908'
     //do not update
@@ -198,12 +205,12 @@ dependencies {
     implementation 'org.eclipse.jetty:jetty-continuation:9.2.19.v20160908'
     //do not update
     implementation 'org.slf4j:slf4j-api:1.7.22'
-    implementation 'com.android.support:appcompat-v7:27.1.1'
-    implementation 'com.android.support:design:27.1.1'
-    implementation 'com.android.support:gridlayout-v7:27.1.1'
-    implementation 'com.android.support:support-v13:27.1.1'
-    implementation 'com.android.support:recyclerview-v7:27.1.1'
-    implementation 'com.android.support:cardview-v7:27.1.1'
+    implementation 'com.android.support:appcompat-v7:28.0.0'
+    implementation 'com.android.support:design:28.0.0'
+    implementation 'com.android.support:gridlayout-v7:28.0.0'
+    implementation 'com.android.support:support-v13:28.0.0'
+    implementation 'com.android.support:recyclerview-v7:28.0.0'
+    implementation 'com.android.support:cardview-v7:28.0.0'
     implementation 'com.squareup.okhttp3:okhttp:3.7.0'
     implementation 'com.google.firebase:firebase-core:16.0.0'
     implementation 'com.crashlytics.sdk.android:crashlytics:2.9.3'
@@ -217,11 +224,32 @@ dependencies {
     implementation 'tools.fastlane:screengrab:1.1.0'
     implementation 'android.arch.lifecycle:extensions:1.1.1'
     implementation 'org.kie.modules:com-google-code-gson:6.5.0.Final'
-    implementation 'com.tencent.bugly:crashreport_upgrade:latest.release'
-    implementation 'com.tencent.bugly:nativecrashreport:latest.release'
     implementation 'org.apache.shiro:shiro-crypto-hash:1.4.0'
-    implementation project(':authorizelibrary')
-    implementation project(':walletlibrary')
-}
+    implementation 'com.belerweb:pinyin4j:2.5.1'
+    implementation 'com.tencent.bugly:crashreport:latest.release'
+    implementation 'com.tencent.bugly:nativecrashreport:latest.release'
+    implementation project(':ElastosSdkWallet')
+    implementation project(path: ':commonlib')
 
-apply plugin: 'com.google.gms.google-services'
+    implementation 'com.github.promeg:tinypinyin:1.0.0'
+    implementation 'org.greenrobot:eventbus:3.0.0'
+    implementation project(path: ':easyrecycleview')
+
+    implementation 'com.android.support:support-v4:23.2.0'
+    implementation 'com.github.chrisbanes:PhotoView:1.3.0'
+    implementation 'com.malinskiy:superrecyclerview:1.1.4'
+    implementation 'com.mikhaellopez:circularprogressbar:1.1.1'
+    implementation 'com.github.bumptech.glide:glide:3.7.0'
+    implementation('com.github.bumptech.glide:okhttp3-integration:1.4.0') {
+        exclude group: 'glide-parent'
+    }
+
+    implementation 'pub.devrel:easypermissions:0.2.1'
+    implementation project(path: ':ElastosSdkIM')
+
+    implementation 'com.aliyun.ams:alicloud-android-push:3.1.6'
+    implementation 'com.aliyun.ams:alicloud-android-third-push:3.0.10@aar'
+    implementation 'com.aliyun.ams:huawei-push:2.6.3.305'
+    implementation 'com.aliyun.ams:huawei-push-base:2.6.3.305'
+    implementation project(path: ':ElastosSdkKeypair')
+}

@@ -12,6 +12,7 @@ import android.view.Display;
 import android.view.WindowManager;
 import android.widget.ImageView;
 
+import com.breadwallet.BuildConfig;
 import com.breadwallet.R;
 import com.breadwallet.wallet.WalletsMaster;
 import com.google.zxing.BarcodeFormat;
@@ -121,8 +122,8 @@ public class QRUtils {
 //
 //    }
 
-    public static boolean generateQR(Context ctx, String bitcoinURL, ImageView qrcode) {
-        if (qrcode == null || bitcoinURL == null || bitcoinURL.isEmpty()) return false;
+    public static  Bitmap generateQRBitmap(Context ctx, String bitcoinURL) {
+        if (bitcoinURL == null || bitcoinURL.isEmpty()) return null;
         WindowManager manager = (WindowManager) ctx.getSystemService(Activity.WINDOW_SERVICE);
         Display display = manager.getDefaultDisplay();
         Point point = new Point();
@@ -133,6 +134,13 @@ public class QRUtils {
         smallerDimension = (int) (smallerDimension * 0.45f);
         Bitmap bitmap = null;
         bitmap = QRUtils.encodeAsBitmap(bitcoinURL, smallerDimension);
+
+        return bitmap;
+    }
+
+    public static boolean generateQR(Context ctx, String bitcoinURL, ImageView qrcode) {
+        if (qrcode == null) return false;
+        Bitmap bitmap = generateQRBitmap(ctx, bitcoinURL);
         //qrcode.setPadding(1, 1, 1, 1);
         //qrcode.setBackgroundResource(R.color.gray);
         if (bitmap == null) return false;
@@ -160,7 +168,7 @@ public class QRUtils {
 
         File file = saveToExternalStorage(QRUtils.encodeAsBitmap(bitcoinUri, 500), app);
         //Uri uri = Uri.fromFile(file);
-        Uri uri = FileProvider.getUriForFile(app, "com.elastos.wallet", file);
+        Uri uri = FileProvider.getUriForFile(app, BuildConfig.APPLICATION_ID, file);
 
         Intent intent = new Intent();
         intent.setAction(Intent.ACTION_SEND);

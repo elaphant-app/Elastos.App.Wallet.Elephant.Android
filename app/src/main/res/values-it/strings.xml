@@ -35,7 +35,7 @@
   <!-- Error alert title -->
   <string name="Alert.error">Errore</string>
   <!-- Keystore error -->
-  <string name="Alert.keystore.generic.android">C’è un problema con il KeyStore del tuo sistema operativo Android, per favore, contatta support@Elephantwallet.com</string>
+  <string name="Alert.keystore.generic.android">C’è un problema con il KeyStore del tuo sistema operativo Android, per favore, contatta support@elaphant.app</string>
   <!-- KeyStore error, keys are invalidated -->
   <string name="Alert.keystore.invalidated.android">I tuoi dati criptati di Elephant sono stati recentemente  invalidati  perché la schermata di blocco del tuo Android era disabilitata.</string>
   <!-- Keystore error title -->
@@ -504,7 +504,7 @@
   <!-- Send money amount label -->
   <string name="Send.amountLabel">Importo</string>
   <!-- Balance: $4.00 -->
-  <string name="Send.balance">Saldo: %1$s</string>
+  <string name="Send.balance">Saldo %1$s</string>
   <!-- Instructions how to allow the camera access for the app -->
   <string name="Send.cameraUnavailabeMessage.android">Consenti l’accesso alla fotocamera in “Impostazioni” &gt; “Apps” &gt; “Elephant” &gt; “Permessi”</string>
   <!-- Permission required to access camera -->
@@ -524,7 +524,7 @@
   <!-- "(you) can't send (to your)self" -->
   <string name="Send.ethSendSelf">Impossibile inviare a se stessi.</string>
   <!-- Network Fee: $0.01 -->
-  <string name="Send.fee">Spese network: %1$s</string>
+  <string name="Send.fee">Spese network %1$s</string>
   <!-- Payee identity not certified alert title. -->
   <string name="Send.identityNotCertified">L\'Identità del beneficiario non certificata.</string>
   <!-- Insufficient funds error -->
@@ -734,7 +734,7 @@
   <!-- sending to <address> -->
   <string name="Transaction.sendingTo">invio in corso a %1$s</string>
   <!-- sent to <address> -->
-  <string name="Transaction.sentTo">invio effettuato a %1$s</string>
+  <string name="Transaction.sentTo">invio effettuato</string>
   <!-- eg. Starting balance: $50.00 -->
   <string name="Transaction.starting">Saldo iniziale: %1$s</string>
   <!-- e.g. "[The money you paid was a] Fee for token transfer: Elephant" (Elephant is the token that was transfered) -->

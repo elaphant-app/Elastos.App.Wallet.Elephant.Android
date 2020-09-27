@@ -49,8 +49,39 @@ public class TxUiHolder {
     public TxMetaData metaData;
     private Object transaction;
     private boolean isReceived;
+    //for ela
+    private String type;
+    private String txType;
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    private String status;
+
+    public TxUiHolder(Object transaction, boolean isReceived, long timeStamp, int blockHeight, byte[] hash, String txReversed,
+                      BigDecimal fee,  String to, String from,
+                      BigDecimal balanceAfterTx, int txSize, BigDecimal amount, boolean isValid, String status, String type, String txType){
+        this(transaction, isReceived, timeStamp, blockHeight, hash, txReversed, fee, to, from,
+                balanceAfterTx, txSize, amount, isValid, status);
+        this.type = type;
+        this.txType = txType;
+    }
 
     //todo refactor this useless class
+    public TxUiHolder(Object transaction, boolean isReceived, long timeStamp, int blockHeight, byte[] hash, String txReversed,
+                      BigDecimal fee,  String to, String from,
+                      BigDecimal balanceAfterTx, int txSize, BigDecimal amount, boolean isValid, String status){
+        this(transaction, isReceived, timeStamp, blockHeight, hash, txReversed, fee, to, from,
+                balanceAfterTx, txSize, amount, isValid);
+//        this.isVote = isVote;
+        this.status = status;
+    }
+
     public TxUiHolder(Object transaction, boolean isReceived, long timeStamp, int blockHeight, byte[] hash, String txReversed,
                       BigDecimal fee,  String to, String from,
                       BigDecimal balanceAfterTx, int txSize, BigDecimal amount, boolean isValid) {
@@ -133,6 +164,11 @@ public class TxUiHolder {
         return isReceived;
     }
 
+    public String getType() {
+        return type;
+    }
 
-
+    public String getTxType() {
+        return txType;
+    }
 }

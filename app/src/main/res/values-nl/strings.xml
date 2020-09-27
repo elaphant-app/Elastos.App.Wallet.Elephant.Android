@@ -35,7 +35,7 @@
   <!-- Error alert title -->
   <string name="Alert.error">Error</string>
   <!-- Keystore error -->
-  <string name="Alert.keystore.generic.android">Er is een probleem met uw Android OS keystore, neem alstublieft contact op met support@Elephantwallet.com</string>
+  <string name="Alert.keystore.generic.android">Er is een probleem met uw Android OS keystore, neem alstublieft contact op met support@elaphant.app</string>
   <!-- KeyStore error, keys are invalidated -->
   <string name="Alert.keystore.invalidated.android">Uw door Elephant geëncrypteerde data is onlangs ongeldig gemaakt omdat uw Android schermvergrendeling is uitgeschakeld.</string>
   <!-- Keystore error title -->
@@ -503,7 +503,7 @@
   <!-- Send money amount label -->
   <string name="Send.amountLabel">Bedrag</string>
   <!-- Balance: $4.00 -->
-  <string name="Send.balance">Balans: %1$s</string>
+  <string name="Send.balance">Balans %1$s</string>
   <!-- Instructions how to allow the camera access for the app -->
   <string name="Send.cameraUnavailabeMessage.android">Sta cameratoegang toe via \"Instellingen\" &gt; \"Apps\" &gt; \"Elephant\" &gt; \"Toestemmingen\"</string>
   <!-- Permission required to access camera -->

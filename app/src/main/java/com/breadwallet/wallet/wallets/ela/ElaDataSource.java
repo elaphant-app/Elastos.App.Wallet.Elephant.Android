@@ -9,132 +9,50 @@ import android.support.annotation.WorkerThread;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.breadwallet.BreadApp;
 import com.breadwallet.R;
 import com.breadwallet.tools.manager.BRSharedPrefs;
 import com.breadwallet.tools.sqlite.BRDataSourceInterface;
 import com.breadwallet.tools.sqlite.BRSQLiteHelper;
 import com.breadwallet.tools.util.BRConstants;
 import com.breadwallet.tools.util.StringUtil;
-import com.breadwallet.tools.util.Utils;
-import com.breadwallet.wallet.wallets.ela.data.ElaTransactionEntity;
+import com.breadwallet.vote.PayLoadEntity;
+import com.breadwallet.vote.ProducerEntity;
+import com.breadwallet.vote.ProducersEntity;
+import com.breadwallet.wallet.wallets.ela.data.DposProducer;
+import com.breadwallet.wallet.wallets.ela.data.DposProducerResult;
+import com.breadwallet.wallet.wallets.ela.data.DposProducers;
+import com.breadwallet.wallet.wallets.ela.data.HistoryTransactionEntity;
 import com.breadwallet.wallet.wallets.ela.request.CreateTx;
+import com.breadwallet.wallet.wallets.ela.request.Outputs;
+import com.breadwallet.wallet.wallets.ela.response.create.ElaOutput;
+import com.breadwallet.wallet.wallets.ela.response.create.ElaTransaction;
 import com.breadwallet.wallet.wallets.ela.response.create.ElaTransactionRes;
-import com.breadwallet.wallet.wallets.ela.response.create.ElaUTXOInputs;
+import com.breadwallet.wallet.wallets.ela.response.create.ElaUTXOInput;
 import com.breadwallet.wallet.wallets.ela.response.create.Meno;
+import com.breadwallet.wallet.wallets.ela.response.create.Payload;
 import com.breadwallet.wallet.wallets.ela.response.history.History;
 import com.breadwallet.wallet.wallets.ela.response.history.TxHistory;
-import com.elastos.jni.Utility;
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.platform.APIClient;
 
+import org.elastos.sdk.keypair.ElastosKeypairSign;
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
-import okhttp3.MediaType;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-
-/**
- * BreadWallet
- * <p/>
- * Created by Mihail Gutan <mihail@breadwallet.com> on 8/4/15.
- * Copyright (c) 2016 breadwallet LLC
- * <p/>
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- * <p/>
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- * <p/>
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
 public class ElaDataSource implements BRDataSourceInterface {
 
     private static final String TAG = ElaDataSource.class.getSimpleName();
 
-    public static final String ELA_NODE_KEY = "elaNodeKey";
+    private static final int ONE_PAGE_SIZE = 10;
 //    https://api-wallet-ela.elastos.org
 //    https://api-wallet-did.elastos.org
 //    hw-ela-api-test.elastos.org
 //    https://api-wallet-ela-testnet.elastos.org/api/1/currHeight
 //    https://api-wallet-did-testnet.elastos.org/api/1/currHeight
-    public static final String ELA_NODE = "api-wallet-ela.elastos.org";
-
-    private static ElaDataSource mInstance;
-
-    private final BRSQLiteHelper dbHelper;
-
-    private SQLiteDatabase database;
-
-    private static Context mContext;
-
-    private static Activity mActivity;
-
-    private ElaDataSource(Context context){
-        mContext = context;
-        if(context instanceof Activity) mActivity = (Activity) context;
-        dbHelper = BRSQLiteHelper.getInstance(context);
-    }
-
-    public static ElaDataSource getInstance(Context context){
-        if(mInstance == null){
-            mInstance = new ElaDataSource(context);
-        }
-
-        return mInstance;
-    }
-
-    public static String getUrl(String api){
-        String node = BRSharedPrefs.getElaNode(mContext, ELA_NODE_KEY);
-        if(StringUtil.isNullOrEmpty(node)) node = ELA_NODE;
-        return new StringBuilder("https://").append(node).append("/").append(api).toString();
-    }
-
-    private final String[] allColumns = {
-            BRSQLiteHelper.ELA_COLUMN_ISRECEIVED,
-            BRSQLiteHelper.ELA_COLUMN_TIMESTAMP,
-            BRSQLiteHelper.ELA_COLUMN_BLOCKHEIGHT,
-            BRSQLiteHelper.ELA_COLUMN_HASH,
-            BRSQLiteHelper.ELA_COLUMN_TXREVERSED,
-            BRSQLiteHelper.ELA_COLUMN_FEE,
-            BRSQLiteHelper.ELA_COLUMN_TO,
-            BRSQLiteHelper.ELA_COLUMN_FROM,
-            BRSQLiteHelper.ELA_COLUMN_BALANCEAFTERTX,
-            BRSQLiteHelper.ELA_COLUMN_TXSIZE,
-            BRSQLiteHelper.ELA_COLUMN_AMOUNT,
-            BRSQLiteHelper.ELA_COLUMN_MENO,
-            BRSQLiteHelper.ELA_COLUMN_ISVALID,
-    };
-
-    public void deleteElaTable(){
-        try {
-            database = openDatabase();
-            database.execSQL("drop table " + BRSQLiteHelper.ELA_TX_TABLE_NAME);
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            closeDatabase();
-        }
-
-    }
 
     public void deleteAllTransactions() {
         try {
@@ -145,68 +63,41 @@ public class ElaDataSource implements BRDataSourceInterface {
         }
     }
 
-
-    public void cacheSingleTx(ElaTransactionEntity entity){
-        List<ElaTransactionEntity> entities = new ArrayList<>();
-        entities.clear();
-        entities.add(entity);
-        cacheMultTx(entities);
-    }
-
-    public synchronized void cacheMultTx(List<ElaTransactionEntity> elaTransactionEntities){
+    public synchronized void cacheMultTx(List<HistoryTransactionEntity> elaTransactionEntities){
         if(elaTransactionEntities == null) return;
-//        Cursor cursor = null;
         try {
             database = openDatabase();
             database.beginTransaction();
 
-            for(ElaTransactionEntity entity : elaTransactionEntities){
-//                cursor = database.query(BRSQLiteHelper.ELA_TX_TABLE_NAME,
-//                        allColumns, BRSQLiteHelper.ELA_COLUMN_TXREVERSED + " = ? COLLATE NOCASE", new String[]{entity.txReversed}, null, null, null);
+            for(HistoryTransactionEntity entity : elaTransactionEntities){
 
-                ContentValues value = new ContentValues();
-                value.put(BRSQLiteHelper.ELA_COLUMN_ISRECEIVED, entity.isReceived? 1:0);
-                value.put(BRSQLiteHelper.ELA_COLUMN_TIMESTAMP, entity.timeStamp);
-                value.put(BRSQLiteHelper.ELA_COLUMN_BLOCKHEIGHT, entity.blockHeight);
-                value.put(BRSQLiteHelper.ELA_COLUMN_HASH, entity.hash);
-                value.put(BRSQLiteHelper.ELA_COLUMN_TXREVERSED, entity.txReversed);
-                value.put(BRSQLiteHelper.ELA_COLUMN_FEE, entity.fee);
-                value.put(BRSQLiteHelper.ELA_COLUMN_TO, entity.toAddress);
-                value.put(BRSQLiteHelper.ELA_COLUMN_FROM, entity.fromAddress);
-                value.put(BRSQLiteHelper.ELA_COLUMN_BALANCEAFTERTX, entity.balanceAfterTx);
-                value.put(BRSQLiteHelper.ELA_COLUMN_TXSIZE, entity.txSize);
-                value.put(BRSQLiteHelper.ELA_COLUMN_AMOUNT, entity.amount);
-                value.put(BRSQLiteHelper.ELA_COLUMN_MENO, entity.memo);
-                value.put(BRSQLiteHelper.ELA_COLUMN_ISVALID, entity.isValid?1:0);
+                ContentValues value = ElaDataUtils.createHistoryValues(entity);
 
                 long l = database.insertWithOnConflict(BRSQLiteHelper.ELA_TX_TABLE_NAME, null, value, SQLiteDatabase.CONFLICT_REPLACE);
                 Log.i(TAG, "l:"+l);
             }
             database.setTransactionSuccessful();
         } catch (Exception e) {
-            database.endTransaction();
             closeDatabase();
             e.printStackTrace();
         } finally {
-//            cursor.close();
             database.endTransaction();
             closeDatabase();
         }
 
     }
 
-
-    public List<ElaTransactionEntity> getAllTransactions(){
-        List<ElaTransactionEntity> currencies = new ArrayList<>();
+    public List<HistoryTransactionEntity> queryHistoryTransactions(){
+        List<HistoryTransactionEntity> currencies = new ArrayList<>();
         Cursor cursor = null;
 
         try {
             database = openDatabase();
-            cursor = database.query(BRSQLiteHelper.ELA_TX_TABLE_NAME, allColumns, null, null, null, null, "timeStamp desc");
+            cursor = database.query(BRSQLiteHelper.ELA_TX_TABLE_NAME, ElaDataUtils.elaHistoryColumn, null, null, null, null, "timeStamp desc");
 
             cursor.moveToFirst();
             while (!cursor.isAfterLast()) {
-                ElaTransactionEntity curEntity = cursorToCurrency(cursor);
+                HistoryTransactionEntity curEntity = ElaDataUtils.cursorToTxEntity(cursor);
                 currencies.add(curEntity);
                 cursor.moveToNext();
             }
@@ -221,30 +112,30 @@ public class ElaDataSource implements BRDataSourceInterface {
         return currencies;
     }
 
-    private ElaTransactionEntity cursorToCurrency(Cursor cursor) {
-        return new ElaTransactionEntity(cursor.getInt(0)==1,
-                cursor.getLong(1),
-                cursor.getInt(2),
-                cursor.getBlob(3),
-                cursor.getString(4),
-                cursor.getLong(5),
-                cursor.getString(6),
-                cursor.getString(7),
-                cursor.getLong(8),
-                cursor.getInt(9),
-                cursor.getLong(10),
-                cursor.getString(11),
-                cursor.getInt(12)==1);
-    }
 
     private void toast(final String message){
+        Log.i("ElaDataApi", "message:"+message);
         if(mActivity !=null)
             mActivity.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    Toast.makeText(mActivity, message, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(mContext, message, Toast.LENGTH_SHORT).show();
                 }
             });
+    }
+
+    public String getRewardAddress(){
+        String rewardAddress = null;
+        try {
+            String url = ElaDataUtils.getUrlByVersion(mContext, "node/reward/address", "v1");
+            String result = APIClient.urlGET(mContext, url);
+            JSONObject object = new JSONObject(result);
+            rewardAddress = object.getString("result");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return rewardAddress;
     }
 
     @WorkerThread
@@ -252,12 +143,10 @@ public class ElaDataSource implements BRDataSourceInterface {
         if(address==null || address.isEmpty()) return null;
         String balance = null;
         try {
-            String url = getUrl("api/1/balance/"+address);
-            Log.i(TAG, "balance url:"+url);
-            String result = urlGET(url);
+            String url = ElaDataUtils.getUrlByVersion(mContext,"balance/"+address, "1");
+            String result = APIClient.urlGET(mContext, url);
             JSONObject object = new JSONObject(result);
             balance = object.getString("result");
-            Log.i(TAG, "balance:"+balance);
             int status = object.getInt("status");
             if(result==null || !result.contains("result") || !result.contains("status") || balance==null || status!=200) {
                 toast("balance crash result:");
@@ -269,185 +158,428 @@ public class ElaDataSource implements BRDataSourceInterface {
         return balance;
     }
 
-    public void getHistory(String address){
-        if(address == null) return;
+    static class ProducerTxid {
+        public List<String> txid;
+    }
+
+    public List<String> mDposVoteTxid = new ArrayList<>();
+    public void getDposProducer(List<String> txids){
+        if(mDposVoteTxid.size() <= 0) return;
+        DposProducerResult dposProducerResult = null;
         try {
-            String url = getUrl("api/1/history/"+address /*+"?pageNum=1&pageSize=10"*/);
+            ProducerTxid producerTxid = new ProducerTxid();
+            producerTxid.txid = txids;
+            String json = new Gson().toJson(producerTxid);
+            String url = ElaDataUtils.getUrlByVersion(mContext,"dpos/transaction/producer", "1");
+            String result = APIClient.urlPost(url, json);
+            dposProducerResult = new Gson().fromJson(result, DposProducerResult.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if(dposProducerResult ==null || dposProducerResult.result==null) return;
+        cacheDposProducer(dposProducerResult.result);
+    }
+
+//    public List<String> mCrcVoteTxid = new ArrayList<>();
+
+    public void refreshHistory(String address){
+        if(StringUtil.isNullOrEmpty(address)) return;
+        mDposVoteTxid.clear();
+//        mCrcVoteTxid.clear();
+        try {
+            String url = ElaDataUtils.getUrlByVersion(mContext,"history/"+address +"?pageNum=1&pageSize="+ONE_PAGE_SIZE+"&order=desc", "v4");
             Log.i(TAG, "history url:"+url);
-            String result = urlGET(url)/*getTxHistory()*/;
+            String result = APIClient.urlGET(mContext, url);
             JSONObject jsonObject = new JSONObject(result);
             String json = jsonObject.getString("result");
             TxHistory txHistory = new Gson().fromJson(json, TxHistory.class);
+            BRSharedPrefs.putTotalPageNumber(mContext, txHistory.TotalNum);
 
-            List<ElaTransactionEntity> elaTransactionEntities = new ArrayList<>();
+            List<HistoryTransactionEntity> elaTransactionEntities = new ArrayList<>();
             elaTransactionEntities.clear();
             List<History> transactions = txHistory.History;
             for(History history : transactions){
-                ElaTransactionEntity elaTransactionEntity = new ElaTransactionEntity();
-                elaTransactionEntity.txReversed = history.Txid;
-                elaTransactionEntity.isReceived = isReceived(history.Type);
-                elaTransactionEntity.fromAddress = isReceived(history.Type) ? history.Inputs.get(0) : history.Outputs.get(0);
-                elaTransactionEntity.toAddress = isReceived(history.Type) ? history.Inputs.get(0) : history.Outputs.get(0);
-                elaTransactionEntity.fee = new BigDecimal(history.Fee).longValue();
-                elaTransactionEntity.blockHeight = history.Height;
-                elaTransactionEntity.hash = history.Txid.getBytes();
-                elaTransactionEntity.txSize = 0;
-                elaTransactionEntity.amount = isReceived(history.Type) ? new BigDecimal(history.Value).longValue() : new BigDecimal(history.Value).subtract(new BigDecimal(history.Fee)).longValue();
-                elaTransactionEntity.balanceAfterTx = 0;
-                elaTransactionEntity.isValid = true;
-                elaTransactionEntity.timeStamp = new BigDecimal(history.CreateTime).longValue();
-                elaTransactionEntity.memo = getMeno(history.Memo);
-                elaTransactionEntities.add(elaTransactionEntity);
+                HistoryTransactionEntity historyTransactionEntity = ElaDataUtils.setHistoryEntity(history, 1);
+                elaTransactionEntities.add(historyTransactionEntity);
+                int dposType = ElaDataUtils.getVoteType(historyTransactionEntity.type, historyTransactionEntity.txType);
+//                int crcType = ElaDataUtils.getVoteType(historyTransactionEntity.type, historyTransactionEntity.txType);
+                if(dposType==1 || dposType==3) mDposVoteTxid.add(history.Txid);
+//                if(crcType==2 || crcType==3) mCrcVoteTxid.add(history.Txid);
             }
+            if(elaTransactionEntities.size() <= 0) return;
             cacheMultTx(elaTransactionEntities);
+            getDposProducer(mDposVoteTxid);
+//            CrcDataSource.getInstance(mContext).getCrcProducer(mCrcVoteTxid);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private String getMeno(String value){
-        if(value==null || !value.contains("msg") || !value.contains("type") || !value.contains(",")) return "";
-        if(value.contains("msg:")){
-            String[] msg = value.split("msg:");
-            if(msg!=null && msg.length==2){
-                return msg[1];
+    public void getHistory(String address){
+        if(StringUtil.isNullOrEmpty(address)) return;
+        mDposVoteTxid.clear();
+//        mCrcVoteTxid.clear();
+        try {
+            int currentPageNumber = BRSharedPrefs.getCurrentHistoryPageNumber(mContext);
+            int pageNumber = currentPageNumber+1;
+            String url = ElaDataUtils.getUrlByVersion(mContext,"history/"+address +"?pageNum="+pageNumber+"&pageSize="+ONE_PAGE_SIZE+"&order=desc", "v4");
+            Log.i(TAG, "history url:"+url);
+            String result = APIClient.urlGET(mContext, url);
+            JSONObject jsonObject = new JSONObject(result);
+            String json = jsonObject.getString("result");
+            TxHistory txHistory = new Gson().fromJson(json, TxHistory.class);
+            BRSharedPrefs.putTotalPageNumber(mContext, txHistory.TotalNum);
+
+            List<HistoryTransactionEntity> elaTransactionEntities = new ArrayList<>();
+            elaTransactionEntities.clear();
+            List<History> transactions = txHistory.History;
+            for(History history : transactions){
+                HistoryTransactionEntity historyTransactionEntity = ElaDataUtils.setHistoryEntity(history, pageNumber);
+                elaTransactionEntities.add(historyTransactionEntity);
+                int dposType = ElaDataUtils.getVoteType(historyTransactionEntity.type, historyTransactionEntity.txType);
+//                int crcType = ElaDataUtils.getVoteType(historyTransactionEntity.type, historyTransactionEntity.txType);
+                if(dposType==1 || dposType==3) mDposVoteTxid.add(history.Txid);
+//                if(crcType==2 || crcType==3) mCrcVoteTxid.add(history.Txid);
             }
+            if(elaTransactionEntities.size() <= 0) {
+                BRSharedPrefs.putCurrentHistoryPageNumber(mContext, currentPageNumber);
+                return;
+            }
+            BRSharedPrefs.putCurrentHistoryPageNumber(mContext, pageNumber);
+            cacheMultTx(elaTransactionEntities);
+            getDposProducer(mDposVoteTxid);
+//            CrcDataSource.getInstance(mContext).getCrcProducer(mCrcVoteTxid);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        return "";
     }
 
-    //true is receive
-    private boolean isReceived(String type){
-        if(type==null || type.equals("")) return false;
-        if(type.equals("spend")) return false;
-        if(type.equals("income")) return true;
-
-        return true;
+    public synchronized List<BRElaTransaction> createElaTx(final String inputAddress,
+                                                           final String outputsAddress,
+                                                           final long amount, String memo){
+        return createElaTx(inputAddress, outputsAddress, amount, memo, null, null, null);
     }
 
-    ElaTransactionEntity elaTransactionEntity = new ElaTransactionEntity();
-    public synchronized BRElaTransaction createElaTx(final String inputAddress, final String outputsAddress, final long amount, String memo){
+    public synchronized List<BRElaTransaction> createElaTx(final String inputAddress,
+                                                           final String outputsAddress,
+                                                           final long amount,
+                                                           String memo,
+                                                           List<PayLoadEntity> publickeys){
+        return createElaTx(inputAddress, outputsAddress, amount, memo, publickeys, null, null);
+    }
+
+    List<HistoryTransactionEntity> multiHistoryTransactionEntity = new ArrayList<>();
+    List<BRElaTransaction> multiElaTransaction = new ArrayList<>();
+    public synchronized List<BRElaTransaction> createElaTx(final String inputAddress,
+                                                           final String outputsAddress,
+                                                           final long amount,
+                                                           String memo,
+                                                           List<PayLoadEntity> publickeys,
+                                                           List<PayLoadEntity> candidateCrcs,
+                                                           CreateTxCallBack callBack){
         if(StringUtil.isNullOrEmpty(inputAddress) || StringUtil.isNullOrEmpty(outputsAddress)) return null;
-        BRElaTransaction brElaTransaction = null;
+
         if(mActivity!=null) toast(mActivity.getResources().getString(R.string.SendTransacton_sending));
         try {
-            String url = getUrl("api/1/createTx");
+            String url = ElaDataUtils.getUrlByVersion(mContext,"createVoteTx", "1");
             Log.i(TAG, "create tx url:"+url);
             CreateTx tx = new CreateTx();
             tx.inputs.add(inputAddress);
 
-            com.breadwallet.wallet.wallets.ela.request.Outputs outputs = new com.breadwallet.wallet.wallets.ela.request.Outputs();
-            outputs.addr = outputsAddress;
-            outputs.amt = amount;
+            Outputs reqOutputs = new Outputs();
+            reqOutputs.addr = outputsAddress;
+            reqOutputs.amt = amount;
 
-            tx.outputs.add(outputs);
+            tx.outputs.add(reqOutputs);
 
             String json = new Gson().toJson(tx);
-            String result = urlPost(url, json)/*getCreateTx()*/;
+            Log.d("posvote", "request json:"+json);
+            String result = APIClient.urlPost(url, json)/*getCreateTx()*/;
 
             JSONObject jsonObject = new JSONObject(result);
             String tranactions = jsonObject.getString("result");
             ElaTransactionRes res = new Gson().fromJson(tranactions, ElaTransactionRes.class);
+
+            if(!ElaDataUtils.checkTx(mContext, inputAddress, outputsAddress, amount, res.Transactions)) return null;
             if(!StringUtil.isNullOrEmpty(memo)) res.Transactions.get(0).Memo = new Meno("text", memo).toString();
-            List<ElaUTXOInputs> inputs = res.Transactions.get(0).UTXOInputs;
-            for(int i=0; i<inputs.size(); i++){
-                ElaUTXOInputs utxoInputs = inputs.get(i);
-                utxoInputs.privateKey  = WalletElaManager.getInstance(mContext).getPrivateKey();
+//            if(!StringUtil.isNullOrEmpty(memo)) {
+//                String memoStr = null;
+//                String outPutPublickey = getPublicKeyByAddress(outputsAddress);
+//                if(!StringUtil.isNullOrEmpty(outPutPublickey)) {
+//                    memo = ElastosKeypairCrypto.eciesEncrypt(outPutPublickey, memo);
+//                    memoStr = new Meno("ciphertext", memo).toString();
+//                } else {
+//                    memoStr = new Meno("text", memo).toString();
+//                }
+//
+//                res.Transactions.get(0).Memo = memoStr;
+//            }
+
+            if(res.Transactions.size() > 1) {
+                if(mActivity!=null) toast(mActivity.getResources().getString(R.string.utxo_too_much_hint));
             }
 
-            String transactionJson =new Gson().toJson(res);
+            multiHistoryTransactionEntity.clear();
+            multiElaTransaction.clear();
+            for(int i=0; i< res.Transactions.size(); i++) {
+                if(!StringUtil.isNullOrEmpty(memo)) res.Transactions.get(i).Memo = new Meno("text", memo).toString();
 
-            brElaTransaction = new BRElaTransaction();
-            brElaTransaction.setTx(transactionJson);
-            brElaTransaction.setTxId(inputs.get(0).txid);
+                List<ElaUTXOInput> inputs = res.Transactions.get(i).UTXOInputs;
+                List<ElaOutput> outputs = res.Transactions.get(i).Outputs;
 
-            elaTransactionEntity.txReversed = inputs.get(0).txid;
-            elaTransactionEntity.fromAddress = inputAddress;
-            elaTransactionEntity.toAddress = outputsAddress;
-            elaTransactionEntity.isReceived = false;
-            elaTransactionEntity.fee = new BigDecimal("4860").longValue();
-            elaTransactionEntity.blockHeight = 0;
-            elaTransactionEntity.hash = new byte[1];
-            elaTransactionEntity.txSize = 0;
-            elaTransactionEntity.amount = new BigDecimal(amount).longValue();
-            elaTransactionEntity.balanceAfterTx = 0;
-            elaTransactionEntity.timeStamp = System.currentTimeMillis()/1000;
-            elaTransactionEntity.isValid = true;
-            elaTransactionEntity.memo = memo;
+                for(int j=0; j<inputs.size(); j++){
+                    ElaUTXOInput utxoInputs = inputs.get(j);
+                    utxoInputs.privateKey  = WalletElaManager.getInstance(mContext).getPrivateKey();
+                }
+
+                if((null!=publickeys && publickeys.size()>0) || (null!=candidateCrcs && candidateCrcs.size()>0)){
+                    List<ElaOutput> outputsR = res.Transactions.get(i).Outputs;
+                    String lastOutPutAddress = outputsR.get(outputsR.size()-1).address;
+                    if(!StringUtil.isNullOrEmpty(lastOutPutAddress)) {
+                        ElaOutput output = outputsR.get(outputsR.size()-1);
+                        Payload tmp = new Payload();
+                        if(callBack!=null) callBack.modifyCrcAmount(output, candidateCrcs, publickeys);
+                        tmp.candidatePublicKeys = publickeys;
+                        tmp.candidateCrcs = candidateCrcs;
+                        output.payload = tmp;
+                    }
+                }
+
+                String transactionJson =new Gson().toJson(res.Transactions.get(i));
+                BRElaTransaction brElaTransaction = new BRElaTransaction();
+                brElaTransaction.setTx(transactionJson);
+                brElaTransaction.setTxId(inputs.get(0).txid);
+
+                HistoryTransactionEntity historyTransactionEntity = new HistoryTransactionEntity();
+                historyTransactionEntity.fromAddress = inputAddress;
+                historyTransactionEntity.toAddress = outputsAddress;
+                historyTransactionEntity.isReceived = false;
+                historyTransactionEntity.fee = WalletElaManager.getInstance(mContext).SALA_FEE.longValue();
+                historyTransactionEntity.blockHeight = 0;
+                historyTransactionEntity.hash = new byte[1];
+                historyTransactionEntity.txSize = 0;
+                historyTransactionEntity.balanceAfterTx = 0;
+                historyTransactionEntity.timeStamp = System.currentTimeMillis()/1000;
+                historyTransactionEntity.isValid = true;
+                historyTransactionEntity.memo = memo;
+                historyTransactionEntity.status=  "pending";
+
+                ElaOutput output = outputs.get(0);
+                String address = output.address;
+                if(!StringUtil.isNullOrEmpty(address) && address.equals(outputsAddress)){
+                    historyTransactionEntity.amount = new BigDecimal(output.amount).longValue();
+                }
+
+                multiElaTransaction.add(brElaTransaction);
+                multiHistoryTransactionEntity.add(historyTransactionEntity);
+            }
         } catch (Exception e) {
-            toast(/*mActivity.getResources().getString(R.string.SendTransacton_failed)*/e.getMessage());
+            if(mActivity!=null) toast(mActivity.getResources().getString(R.string.SendTransacton_failed));
             e.printStackTrace();
         }
 
-        return brElaTransaction;
+        return multiElaTransaction;
+    }
+
+    public interface CreateTxCallBack {
+        void modifyCrcAmount(ElaOutput outputs, List<PayLoadEntity> crcs, List<PayLoadEntity> dposs);
     }
 
 
-    public synchronized String sendElaRawTx(final String transaction){
-
+    public synchronized String sendElaRawTx(final List<BRElaTransaction> transactions){
+        if(transactions==null || transactions.size()<=0) return null;
         String result = null;
         try {
-            String url = getUrl("api/1/sendRawTx");
+            String url = ElaDataUtils.getUrlByVersion(mContext, "sendRawTx", "1");
             Log.i(TAG, "send raw url:"+url);
-            String rawTransaction = Utility.getInstance(mContext).generateRawTransaction(transaction);
-            String json = "{"+"\"data\"" + ":" + "\"" + rawTransaction + "\"" +"}";
-            Log.i(TAG, "rawTransaction:"+rawTransaction);
-            String tmp = urlPost(url, json);
+            List<String> rawTransactions = new ArrayList<>();
+            for(int i=0; i<transactions.size(); i++) {
+                ElaTransaction elaTransaction = new Gson().fromJson(transactions.get(i).getTx(), ElaTransaction.class);
+                List<ElaTransaction> elaTransactions = new ArrayList<>();
+                elaTransactions.add(elaTransaction);
+                ElaTransactionRes elaTransactionRes = new ElaTransactionRes();
+                elaTransactionRes.Transactions = elaTransactions;
+                String txs = new Gson().toJson(elaTransactionRes);
+                String rawTransaction = ElastosKeypairSign.generateRawTransaction(txs, BRConstants.ELA_ASSET_ID);
+                rawTransactions.add(rawTransaction);
+            }
+
+            String json = "{\"data\":" + new Gson().toJson(rawTransactions) + "}";
+
+            String tmp = APIClient.urlPost(url, json) /*"{\"result\":[\"8cf2df7d3205b286a1531d28225b7cb5d8c7834a282ba70499759eba31479024\"],\"status\":200}"*/;
             JSONObject jsonObject = new JSONObject(tmp);
             result = jsonObject.getString("result");
             if(result==null || result.contains("ERROR") || result.contains(" ")) {
-                toast(result);
+                Thread.sleep(3000);
+                if(mActivity!=null) toast(/*mActivity.getString(R.string.double_spend)*/"send transaction error");
+//                toast(result);
                 return null;
             }
-            elaTransactionEntity.txReversed = result;
-            cacheSingleTx(elaTransactionEntity);
-            Log.i("rawTx", "result:"+result);
+            List<String> historyTransactions = new Gson().fromJson(result, new TypeToken<List<String>>() {
+            }.getType());
+//            if(multiHistoryTransactionEntity.size() != historyTransactions.size()) return null;
+            for(int i=0; i<historyTransactions.size(); i++) {
+                multiHistoryTransactionEntity.get(i).txReversed = historyTransactions.get(i);
+            }
+            cacheMultTx(multiHistoryTransactionEntity);
         } catch (Exception e) {
-            toast(/*mActivity.getResources().getString(R.string.SendTransacton_failed)*/e.getMessage());
+            if(mActivity!=null) toast(mActivity.getResources().getString(R.string.SendTransacton_failed));
             e.printStackTrace();
         }
 
         return result;
     }
 
-    public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
-    public String urlPost(String url, String json) throws IOException {
-        RequestBody body = RequestBody.create(JSON, json);
-        Request request = new Request.Builder()
-                .url(url)
-                .post(body)
-                .build();
-        Response response = APIClient.elaClient.newCall(request).execute();
-        if (response.isSuccessful()) {
-            return response.body().string();
-        } else {
-            throw new IOException("Unexpected code " + response);
+    public synchronized String sendSerializedRawTx(final String rawTransaction) {
+        String result = null;
+        try {
+            String url = ElaDataUtils.getUrlByVersion(mContext, "sendRawTx", "1");
+            Log.i(TAG, "send raw url:"+url);
+            String json = "{"+"\"data\"" + ":" + "\"" + rawTransaction + "\"" +"}";
+            Log.i(TAG, "rawTransaction:"+rawTransaction);
+            String tmp = APIClient.urlPost(url, json);
+            JSONObject jsonObject = new JSONObject(tmp);
+            result = jsonObject.getString("result");
+            Log.d(TAG, "send raw tx result: " + tmp);
+            if(result==null || result.contains("ERROR") || result.contains(" ")) {
+                Thread.sleep(3000);
+                if(mActivity!=null) toast(mActivity.getString(R.string.double_spend));
+                return null;
+            }
+            Log.d("post multi-sig", "txId:"+result);
+        } catch (Exception e) {
+            if(mActivity!=null) toast(mActivity.getResources().getString(R.string.SendTransacton_failed));
+            e.printStackTrace();
+        }
+
+        return result;
+    }
+
+    public long getNodeFee() {
+        long result = 0;
+        try {
+            String url = ElaDataUtils.getUrlByVersion(mContext,"fee", "1");
+            String tmp = APIClient.urlGET(mContext, url);
+            JSONObject jsonObject = new JSONObject(tmp);
+            result = jsonObject.getLong("result");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return result;
+    }
+
+    public void getAllDposProducers(){
+        try {
+            String jsonRes = APIClient.urlGET(mContext, ElaDataUtils.getUrlByVersion(mContext,"dpos/rank/height/9999999999999999", "1"));
+            if(!StringUtil.isNullOrEmpty(jsonRes) && jsonRes.contains("result")) {
+                ProducersEntity producersEntity = new Gson().fromJson(jsonRes, ProducersEntity.class);
+                List list = producersEntity.result;
+                if(list==null || list.size()<=0) return;
+                cacheAllDposProducer(list);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
-    @WorkerThread
-    public String urlGET(String myURL) throws IOException {
-        Map<String, String> headers = BreadApp.getBreadHeaders();
-
-        Request.Builder builder = new Request.Builder()
-                .url(myURL)
-                .header("Content-Type", "application/json")
-                .header("Accept", "application/json")
-                .header("User-agent", Utils.getAgentString(mContext, "android/HttpURLConnection"))
-                .get();
-        Iterator it = headers.entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry pair = (Map.Entry) it.next();
-            builder.header((String) pair.getKey(), (String) pair.getValue());
+    public List<DposProducer> queryDposProducer(String txid){
+        if(StringUtil.isNullOrEmpty(txid)) return null;
+        List<DposProducer> entities = new ArrayList<>();
+        Cursor cursor = null;
+        try {
+            cursor = database.query(BRSQLiteHelper.DPOS_PRODUCER_TABLE_NAME,
+                    null, BRSQLiteHelper.DPOS_PRODUCER_TXID + " = ?", new String[]{txid},
+                    null, null, null);
+            cursor.moveToFirst();
+            while (!cursor.isAfterLast()) {
+                DposProducer producerEntity = ElaDataUtils.cursorToTxProducerEntity(cursor);
+                entities.add(producerEntity);
+                cursor.moveToNext();
+            }
+        } catch (Exception e){
+            e.printStackTrace();
+        } finally {
+            if (cursor != null)
+                cursor.close();
+            closeDatabase();
         }
 
-        Request request = builder.build();
-        Response response = APIClient.elaClient.newCall(request).execute();
+        return entities;
+    }
 
-        if (response.isSuccessful()) {
-            return response.body().string();
-        } else {
-            throw new IOException("Unexpected code " + response);
+    public List<ProducerEntity> queryDposProducers(List<String> publicKeys){
+        if(publicKeys==null || publicKeys.size()<=0) return null;
+        List<ProducerEntity> entities = new ArrayList<>();
+        Cursor cursor = null;
+        try {
+            database = openDatabase();
+
+            for(String publickey : publicKeys){
+                cursor = database.query(BRSQLiteHelper.ELA_PRODUCER_TABLE_NAME,
+                        null, BRSQLiteHelper.PEODUCER_PUBLIC_KEY + " = ?", new String[]{publickey},
+                        null, null, null);
+                cursor.moveToFirst();
+                while (!cursor.isAfterLast()) {
+                    ProducerEntity producerEntity = ElaDataUtils.cursorToProducerEntity(cursor);
+                    entities.add(producerEntity);
+                    cursor.moveToNext();
+                }
+            }
+        } catch (Exception e){
+            e.printStackTrace();
+        } finally {
+            if (cursor != null)
+                cursor.close();
+            closeDatabase();
+        }
+
+        return entities;
+    }
+
+    public void cacheDposProducer(List<DposProducers> entities){
+        if(entities==null || entities.size()<=0) return;
+        try {
+            database = openDatabase();
+            database.beginTransaction();
+            for(DposProducers dposProducers : entities){
+                if(null== dposProducers.Producer || StringUtil.isNullOrEmpty(dposProducers.Txid)) break;
+                for(DposProducer dposProducer : dposProducers.Producer){
+                    ContentValues value = new ContentValues();
+                    value.put(BRSQLiteHelper.DPOS_PRODUCER_TXID, dposProducers.Txid);
+                    value.put(BRSQLiteHelper.DPOS_PRODUCER_OWN_PUBLICKEY, dposProducer.Ownerpublickey);
+                    value.put(BRSQLiteHelper.DPOS_PRODUCER_NOD_PUBLICKEY, dposProducer.Nodepublickey);
+                    value.put(BRSQLiteHelper.DPOS_PRODUCER_NICKNAME, dposProducer.Nickname);
+                    long l = database.insertWithOnConflict(BRSQLiteHelper.DPOS_PRODUCER_TABLE_NAME, null, value, SQLiteDatabase.CONFLICT_REPLACE);
+                }
+            }
+            database.setTransactionSuccessful();
+        } catch (Exception e) {
+            closeDatabase();
+            e.printStackTrace();
+        } finally {
+            database.endTransaction();
+            closeDatabase();
+        }
+    }
+
+    public synchronized void cacheAllDposProducer(List<ProducerEntity> values) {
+        if (values == null || values.size() <= 0) return;
+        try {
+            database = openDatabase();
+            database.beginTransaction();
+
+            for (ProducerEntity entity : values) {
+                ContentValues value = ElaDataUtils.createProducerValues(entity);
+                long l = database.insertWithOnConflict(BRSQLiteHelper.ELA_PRODUCER_TABLE_NAME, null, value, SQLiteDatabase.CONFLICT_REPLACE);
+            }
+            database.setTransactionSuccessful();
+        } catch (Exception e) {
+            closeDatabase();
+            e.printStackTrace();
+        } finally {
+            database.endTransaction();
+            closeDatabase();
         }
     }
 
@@ -463,5 +595,37 @@ public class ElaDataSource implements BRDataSourceInterface {
     @Override
     public void closeDatabase() {
 
+    }
+
+    private static ElaDataSource mInstance;
+
+    private final BRSQLiteHelper dbHelper;
+
+    private SQLiteDatabase database;
+
+    private static Context mContext;
+
+    private static Activity mActivity;
+
+    private ElaDataSource(Context context){
+        mContext = context;
+        if(context instanceof Activity) mActivity = findActivity(context);
+        dbHelper = BRSQLiteHelper.getInstance(context);
+    }
+
+
+    private static Activity findActivity(Context context) {
+        if (context instanceof Activity) {
+            return (Activity) context;
+        }
+        return null;
+    }
+
+    public static ElaDataSource getInstance(Context context){
+        if(mInstance == null){
+            mInstance = new ElaDataSource(context);
+        }
+
+        return mInstance;
     }
 }

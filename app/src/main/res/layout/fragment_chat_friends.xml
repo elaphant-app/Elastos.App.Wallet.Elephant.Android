@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <EditText
+        android:id="@+id/friends_search_edt"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:background="@drawable/chat_friend_search_bg"
+        android:layout_marginTop="20dp"
+        android:layout_marginLeft="10dp"
+        android:drawableLeft="@drawable/ic_chat_search"
+        android:paddingLeft="5dp"
+        android:layout_marginRight="10dp"/>
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/friends_rv"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="10dp"
+        android:layout_below="@+id/friends_search_edt"
+        android:background="@android:color/white"/>
+
+    <org.chat.lib.widget.IndexBar
+        android:id="@+id/indexBar"
+        android:layout_width="24dp"
+        android:layout_height="match_parent"
+        app:indexBarPressBackground="#00000000"
+        app:indexBarTextSize="15sp"
+        android:layout_marginTop="10dp"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/friends_search_edt"/>
+
+    <TextView
+        android:id="@+id/side_bar_hint"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_centerInParent="true"
+        android:gravity="center"
+        android:textColor="@android:color/white"
+        android:background="@drawable/side_bar_hint_shape"
+        android:textSize="48sp"
+        android:visibility="gone"
+        tools:text="A" />
+
+</RelativeLayout>

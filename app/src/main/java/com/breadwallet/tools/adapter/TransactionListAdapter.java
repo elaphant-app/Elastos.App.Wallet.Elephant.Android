@@ -1,9 +1,9 @@
 package com.breadwallet.tools.adapter;
 
-import android.app.Activity;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.format.DateUtils;
 import android.util.Log;
@@ -11,7 +11,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -24,10 +23,12 @@ import com.breadwallet.tools.manager.BRSharedPrefs;
 import com.breadwallet.tools.threads.executor.BRExecutor;
 import com.breadwallet.tools.util.BRDateUtil;
 import com.breadwallet.tools.util.CurrencyUtils;
+import com.breadwallet.tools.util.StringUtil;
 import com.breadwallet.tools.util.Utils;
 import com.breadwallet.wallet.WalletsMaster;
 import com.breadwallet.wallet.abstracts.BaseWalletManager;
 import com.breadwallet.wallet.wallets.CryptoTransaction;
+import com.breadwallet.wallet.wallets.ela.ElaDataUtils;
 import com.breadwallet.wallet.wallets.ethereum.WalletEthManager;
 import com.platform.entities.TxMetaData;
 import com.platform.tools.KVStoreManager;
@@ -72,11 +73,19 @@ public class TransactionListAdapter extends RecyclerView.Adapter<RecyclerView.Vi
     private List<TxUiHolder> backUpFeed;
     private List<TxUiHolder> itemFeed;
     private Map<Integer, TxMetaData> mMetaDatas;
+    private int mLastVisibleItemPosition;
 
-    private final int TX_TYPE = 0;
+    private final int TYPE_ITEM = 0;
+    private final int TYPE_FOOTER = 1;
+
+    public static final int LOADING = 1;
+    public static final int LOAD_COMPLETE = 2;
+    public static final int LOAD_NO_MORE = 3;
+    private int mLoadState = LOADING;
+
     private boolean mIsUpdatingData;
 
-    public TransactionListAdapter(Context context, List<TxUiHolder> items) {
+    public TransactionListAdapter(Context context, RecyclerView recyclerView, List<TxUiHolder> items) {
         this.mTxResourceId = R.layout.tx_item;
         this.mContext = context;
         backUpFeed = items;
@@ -84,6 +93,35 @@ public class TransactionListAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         mMetaDatas = new HashMap<>();
         items = new ArrayList<>();
         init(items);
+        if(null != recyclerView){
+            recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+                private boolean canLoadMore = false;
+                @Override
+                public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                    super.onScrollStateChanged(recyclerView, newState);
+                    if(newState == RecyclerView.SCROLL_STATE_IDLE){
+                        LinearLayoutManager manager = (LinearLayoutManager) recyclerView.getLayoutManager();
+                        int lastItemPosition = manager.findLastCompletelyVisibleItemPosition();
+                        int itemCount = manager.getItemCount();
+                        if(lastItemPosition==(itemCount-1) && canLoadMore){
+                            if(mLoadMoreListener != null) mLoadMoreListener.loadMore();
+                        }
+                    }
+                }
+
+                @Override
+                public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                    super.onScrolled(recyclerView, dx, dy);
+                    BaseWalletManager walletManager = WalletsMaster.getInstance(mContext).getCurrentWallet(mContext);
+                    String iso = walletManager.getIso();
+                    if(!StringUtil.isNullOrEmpty(iso) && !iso.equalsIgnoreCase("ELA")) {
+                        canLoadMore = false;
+                    } else {
+                        canLoadMore = dy > 0;
+                    }
+                }
+            });
+        }
     }
 
     public void setItems(List<TxUiHolder> items) {
@@ -103,6 +141,11 @@ public class TransactionListAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         this.itemFeed = items;
         this.backUpFeed = items;
 
+    }
+
+    public void clearData() {
+        if (null != itemFeed) itemFeed.clear();
+        if (null != backUpFeed) backUpFeed.clear();
     }
 
     public void updateData() {
@@ -147,28 +190,73 @@ public class TransactionListAdapter extends RecyclerView.Adapter<RecyclerView.Vi
 
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+
+        if (viewType == TYPE_FOOTER) {
+            return new FooterViewHolder(inflater.inflate(R.layout.swipe_refresh_layout, parent, false));
+        }
         // inflate the layout
-        LayoutInflater inflater = ((Activity) mContext).getLayoutInflater();
         return new TxHolder(inflater.inflate(mTxResourceId, parent, false));
     }
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-        if (holder.getItemViewType() == TX_TYPE) {
+//        if (holder.getItemViewType() == TYPE_ITEM) {
+//            holder.setIsRecyclable(false);
+//            setTexts((TxHolder) holder, position);
+//        }
+
+        if (holder instanceof TxHolder) {
             holder.setIsRecyclable(false);
             setTexts((TxHolder) holder, position);
+        } else if (holder instanceof FooterViewHolder) {
+            FooterViewHolder footViewHolder = (FooterViewHolder) holder;
+            switch (mLoadState) {
+                case LOADING:
+                    footViewHolder.mProgress.setVisibility(View.VISIBLE);
+                    footViewHolder.mHint.setText(mContext.getString(R.string.history_loading_hint));
+                    break;
+                case LOAD_COMPLETE:
+                    footViewHolder.mProgress.setVisibility(View.INVISIBLE);
+                    footViewHolder.mHint.setText(mContext.getString(R.string.history_pull_refresh_hint));
+                    break;
+                case LOAD_NO_MORE:
+                    footViewHolder.mProgress.setVisibility(View.INVISIBLE);
+                    footViewHolder.mHint.setText(mContext.getString(R.string.history_load_no_data));
+                    break;
+                default:
+                    break;
+
+            }
         }
 
     }
 
+    public void setLoadState(int loadState){
+        this.mLoadState = loadState;
+        notifyDataSetChanged();
+    }
+
     @Override
     public int getItemViewType(int position) {
-        return TX_TYPE;
+        BaseWalletManager wm = WalletsMaster.getInstance(mContext).getCurrentWallet(mContext);
+        if (wm == null) return TYPE_ITEM;
+        String iso = wm.getIso();
+        if (!StringUtil.isNullOrEmpty(iso) && iso.equalsIgnoreCase("ELA")) {
+            if (position + 1 == getItemCount()) {
+                return TYPE_FOOTER;
+            }
+        }
+
+        return TYPE_ITEM;
     }
 
     @Override
     public int getItemCount() {
-        return itemFeed.size();
+        BaseWalletManager wm = WalletsMaster.getInstance(mContext).getCurrentWallet(mContext);
+        if (wm == null) itemFeed.size();
+        String iso = wm.getIso();
+        return (!StringUtil.isNullOrEmpty(iso) && iso.equalsIgnoreCase("ELA")) ? itemFeed.size() + 1 : itemFeed.size();
     }
 
     private void setTexts(final TxHolder convertView, int position) {
@@ -181,10 +269,6 @@ public class TransactionListAdapter extends RecyclerView.Adapter<RecyclerView.Vi
             if (md.comment != null) {
                 commentString = md.comment;
             }
-        }
-
-        if(wm.getIso().equalsIgnoreCase("ELA")){
-            commentString = item.memo==null ? "": item.memo;
         }
 
         boolean received = item.isReceived();
@@ -213,6 +297,26 @@ public class TransactionListAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         }
         String formattedAmount = CurrencyUtils.getFormattedAmount(mContext, preferredIso, amount, wm.getUiConfiguration().getMaxDecimalPlacesForUi());
         convertView.transactionAmount.setText(formattedAmount);
+
+        String type = item.getType();
+        String txType = item.getTxType();
+        convertView.transactionDposFlag.setVisibility(View.GONE);
+        convertView.transactionCrcFlag.setVisibility(View.GONE);
+        if(!StringUtil.isNullOrEmpty(type) && !StringUtil.isNullOrEmpty(txType)) {
+            if(type.equals("spend")) {
+                if(ElaDataUtils.getVoteType(type, txType) == 1) {
+                    convertView.transactionDposFlag.setVisibility(View.VISIBLE);
+                    convertView.transactionCrcFlag.setVisibility(View.GONE);
+                } else if(ElaDataUtils.getVoteType(type, txType) == 2) {
+                    convertView.transactionDposFlag.setVisibility(View.GONE);
+                    convertView.transactionCrcFlag.setVisibility(View.VISIBLE);
+                } else if(ElaDataUtils.getVoteType(type, txType) == 3) {
+                    convertView.transactionDposFlag.setVisibility(View.VISIBLE);
+                    convertView.transactionCrcFlag.setVisibility(View.VISIBLE);
+                }
+            }
+        }
+
         int blockHeight = item.getBlockHeight();
         int lastBlockHeight = BRSharedPrefs.getLastBlockHeight(mContext, wm.getIso());
         int confirms = blockHeight == Integer.MAX_VALUE ? 0 : lastBlockHeight - blockHeight + 1;
@@ -232,28 +336,41 @@ public class TransactionListAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                 level = confirms + 2;
             }
         }
-        if (level > 0 && level < 5) {
-            showTransactionProgress(convertView, level * 20);
-        }
+
         //已发送至
-        String sentTo = String.format(mContext.getString(R.string.Transaction_sentTo), wm.decorateAddress(item.getTo()));
+        String sentTo = mContext.getResources().getString(R.string.Transaction_sentTo);
         //已通过
-        String receivedVia = String.format(mContext.getString(R.string.TransactionDetails_receivedVia), wm.decorateAddress(item.getFrom()));
+        String receivedVia = mContext.getResources().getString(R.string.TransactionDetails_receivedVia);
         //正在发送至
-        String sendingTo = String.format(mContext.getString(R.string.Transaction_sendingTo), wm.decorateAddress(item.getTo()));
+        String sendingTo = mContext.getResources().getString(R.string.Transaction_sendingTo);
         //正在通过 接收
-        String receivingVia = String.format(mContext.getString(R.string.TransactionDetails_receivingVia), wm.decorateAddress(item.getFrom()));
+        String receivingVia = mContext.getResources().getString(R.string.TransactionDetails_receivingVia);
+
+        if (item.isReceived()) {
+            convertView.transactionIcon.setBackgroundResource(R.drawable.ellipse_receive);
+            String from = item.getFrom();
+            convertView.transactionDetail.setText(StringUtil.isNullOrEmpty(from) ? item.getTo() : from);
+        } else {
+            convertView.transactionIcon.setBackgroundResource(R.drawable.ellipse_send);
+            convertView.transactionDetail.setText(item.getTo());
+        }
 
         if (level > 4) {
-            convertView.transactionDetail.setText(!commentString.isEmpty() ? commentString : (!received ? sentTo : receivedVia));
+            convertView.transactionStatus.setText(!received ? sentTo : receivedVia);
+            convertView.transactionStatus.setTextColor(mContext.getColor(!received ? R.color.tx_send_color : R.color.transaction_amount_received_color));
         } else {
-            convertView.transactionDetail.setText(!commentString.isEmpty() ? commentString : (!received ? sendingTo : receivingVia));
+            convertView.transactionStatus.setText(!received ? sendingTo : receivingVia);
+            convertView.transactionStatus.setTextColor(mContext.getColor(!received ? R.color.total_assets_usd_color : R.color.transaction_amount_received_color));
         }
-        if(wm.getIso().equalsIgnoreCase("ELA")) {
-            if(level == 0) {
-                convertView.transactionDetail.setText(!commentString.isEmpty() ? commentString : (!received ? sentTo : receivedVia));
+        if (wm.getIso().equalsIgnoreCase("ELA") || wm.getIso().equalsIgnoreCase("IOEX")) {
+            String status = item.getStatus();
+            if (level==0 && (status==null || status.equalsIgnoreCase("confirmed"))) {
+                convertView.transactionStatus.setText(!received ? sentTo : receivedVia);
+                convertView.transactionStatus.setTextColor(mContext.getColor(!received ? R.color.tx_send_color : R.color.transaction_amount_received_color));
             } else {
-                convertView.transactionDetail.setText(!commentString.isEmpty() ? commentString : (!received ? sendingTo : receivingVia));
+                convertView.transactionStatus.setText(!received ? sendingTo : receivingVia);
+                convertView.transactionIcon.setBackgroundResource(!received ? R.drawable.ellipse_sending : R.drawable.ellipse_receive);
+                convertView.transactionStatus.setTextColor(mContext.getColor(!received ? R.color.total_assets_usd_color : R.color.transaction_amount_received_color));
             }
         }
         if (tkn != null) // it's a token transfer ETH tx
@@ -262,7 +379,7 @@ public class TransactionListAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         //if it's 0 we use the current time.
         long timeStamp = item.getTimeStamp() == 0 ? System.currentTimeMillis() : item.getTimeStamp() * DateUtils.SECOND_IN_MILLIS;
 
-        String shortDate = BRDateUtil.getShortDate(timeStamp);
+        String shortDate = BRDateUtil.getFullDate(timeStamp);
 
         convertView.transactionDate.setText(shortDate);
     }
@@ -370,21 +487,32 @@ public class TransactionListAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         notifyDataSetChanged();
     }
 
+    private class FooterViewHolder extends RecyclerView.ViewHolder {
+        private View mProgress;
+        private BaseTextView mHint;
+
+        public FooterViewHolder(View itemView) {
+            super(itemView);
+            mProgress = itemView.findViewById(R.id.loading_progress);
+            mHint = itemView.findViewById(R.id.load_state_tv);
+        }
+    }
+
     private class TxHolder extends RecyclerView.ViewHolder {
-        public RelativeLayout mainLayout;
         public ConstraintLayout constraintLayout;
-        public TextView sentReceived;
         public TextView amount;
         public TextView account;
         public TextView status;
-        public TextView status_2;
         public TextView timestamp;
         public TextView comment;
-        public ImageView arrowIcon;
 
+        public BaseTextView transactionIcon;
         public BaseTextView transactionDate;
         public BaseTextView transactionAmount;
         public BaseTextView transactionDetail;
+        public BaseTextView transactionStatus;
+        public BaseTextView transactionDposFlag;
+        public BaseTextView transactionCrcFlag;
         public Button transactionFailed;
         public ProgressBar transactionProgress;
 
@@ -395,10 +523,23 @@ public class TransactionListAdapter extends RecyclerView.Adapter<RecyclerView.Vi
             transactionDate = view.findViewById(R.id.tx_date);
             transactionAmount = view.findViewById(R.id.tx_amount);
             transactionDetail = view.findViewById(R.id.tx_description);
+            transactionStatus = view.findViewById(R.id.tx_status);
             transactionFailed = view.findViewById(R.id.tx_failed_button);
             transactionProgress = view.findViewById(R.id.tx_progress);
-
+            transactionIcon = view.findViewById(R.id.tx_status_icon);
+            transactionDposFlag = view.findViewById(R.id.dpos_vote_flag);
+            transactionCrcFlag = view.findViewById(R.id.crc_vote_flag);
         }
+    }
+
+    private LoadMoreListener mLoadMoreListener = null;
+
+    public void setLoadMoreListener(LoadMoreListener listener) {
+        this.mLoadMoreListener = listener;
+    }
+
+    public interface LoadMoreListener {
+        void loadMore();
     }
 
 }

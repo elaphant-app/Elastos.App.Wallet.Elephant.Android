@@ -30,6 +30,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import com.breadwallet.tools.animation.UiUtils;
 import com.breadwallet.tools.util.BRConstants;
 
 public class PlatformSqliteHelper extends SQLiteOpenHelper {
@@ -37,14 +38,15 @@ public class PlatformSqliteHelper extends SQLiteOpenHelper {
 
     private static PlatformSqliteHelper instance;
 
-    public static final String DATABASE_NAME = "platform.db";
-    private static final int DATABASE_VERSION = 3;
+    public static String DATABASE_NAME = "platform.db";
+    private static final int DATABASE_VERSION = 5;
 
     public static synchronized PlatformSqliteHelper getInstance(Context context) {
 
         // Use the application context, which will ensure that you
         // don't accidentally leak an Activity's context.
         // See this article for more information: http://bit.ly/6LRzfx
+        DATABASE_NAME = UiUtils.getCacheProviderName(context, DATABASE_NAME);
         if (instance == null) {
             instance = new PlatformSqliteHelper(context.getApplicationContext());
         }

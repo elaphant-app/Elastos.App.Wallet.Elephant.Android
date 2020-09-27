@@ -1,7 +1,5 @@
 package com.breadwallet.presenter.activities;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -10,7 +8,6 @@ import android.support.annotation.NonNull;
 import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.View;
-import android.view.animation.AccelerateInterpolator;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -24,6 +21,7 @@ import com.breadwallet.presenter.customviews.PinLayout;
 import com.breadwallet.presenter.interfaces.BRAuthCompletion;
 import com.breadwallet.tools.animation.SpringAnimator;
 import com.breadwallet.tools.animation.UiUtils;
+import com.breadwallet.tools.manager.BRPublicSharedPrefs;
 import com.breadwallet.tools.manager.BRSharedPrefs;
 import com.breadwallet.tools.security.AuthManager;
 import com.breadwallet.tools.security.BRKeyStore;
@@ -88,7 +86,7 @@ public class LoginActivity extends BRActivity implements BreadApp.OnAppBackgroun
             }
         });
 
-        final boolean useFingerprint = AuthManager.isFingerPrintAvailableAndSetup(this) && BRSharedPrefs.getUseFingerprint(this);
+        final boolean useFingerprint = AuthManager.isFingerPrintAvailableAndSetup(this) && BRPublicSharedPrefs.getUseFingerprint(this);
         mFingerPrint.setVisibility(useFingerprint ? View.VISIBLE : View.GONE);
 
         if (useFingerprint) {
@@ -129,7 +127,7 @@ public class LoginActivity extends BRActivity implements BreadApp.OnAppBackgroun
     protected void onResume() {
         super.onResume();
 
-        mPinDigitViews.setup(mKeyboard, this);
+        if(mPinDigitViews != null) mPinDigitViews.setup(mKeyboard, this);
         BRExecutor.getInstance().forBackgroundTasks().execute(new Runnable() {
             @Override
             public void run() {
@@ -143,7 +141,7 @@ public class LoginActivity extends BRActivity implements BreadApp.OnAppBackgroun
     @Override
     protected void onPause() {
         super.onPause();
-        mPinDigitViews.cleanUp();
+        if(mPinDigitViews != null) mPinDigitViews.cleanUp();
     }
 
     @Override
@@ -229,6 +227,11 @@ public class LoginActivity extends BRActivity implements BreadApp.OnAppBackgroun
             }
             // other 'case' lines to check for other
             // permissions this app might request
+        } else if(requestCode == BRConstants.CHAT_CAMERA_REQUST_ID) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                UiUtils.openScanner(this, BRConstants.SCANNER_REQUEST);
+                UiUtils.startAddFriendActivity(this, BRConstants.CHAT_SINGLE_TYPE);
+            }
         }
     }
 

@@ -54,7 +54,9 @@ public class ManageWalletsActivity extends BaseSettingsActivity implements OnSta
 
         final ArrayList<TokenItem> tokenItems = new ArrayList<>();
 
-        mTokens = KVStoreManager.getInstance().getTokenListMetaData(ManageWalletsActivity.this).enabledCurrencies;
+        TokenListMetaData tokenListMetaData = KVStoreManager.getInstance().getTokenListMetaData(ManageWalletsActivity.this);
+
+        mTokens = (tokenListMetaData!=null) ? tokenListMetaData.enabledCurrencies : new ArrayList<TokenListMetaData.TokenInfo>();
 
         for (int i = 0; i < mTokens.size(); i++) {
 
@@ -62,8 +64,12 @@ public class ManageWalletsActivity extends BaseSettingsActivity implements OnSta
             TokenItem tokenItem = null;
             String tokenSymbol = mTokens.get(i).symbol;
 
-            if (!tokenSymbol.equalsIgnoreCase("btc") && !tokenSymbol.equalsIgnoreCase("bch") &&
-                    !tokenSymbol.equalsIgnoreCase("eth") && !tokenSymbol.equalsIgnoreCase("ela")) {
+            if (!tokenSymbol.equalsIgnoreCase("btc")
+                    && !tokenSymbol.equalsIgnoreCase("bch") &&
+                    !tokenSymbol.equalsIgnoreCase("eth")
+                    && !tokenSymbol.equalsIgnoreCase("ela")
+                    && !tokenSymbol.equalsIgnoreCase("ioex")
+                    && !tokenSymbol.equalsIgnoreCase("ELAETHSC")) {
 
                 BREthereumToken tk = WalletEthManager.getInstance(this).node.lookupToken(info.contractAddress);
                 if (tk == null) {
@@ -80,9 +86,12 @@ public class ManageWalletsActivity extends BaseSettingsActivity implements OnSta
                 tokenItem = new TokenItem(null, "BCH", "Bitcoin Cash", null);
             else if (tokenSymbol.equalsIgnoreCase("eth"))
                 tokenItem = new TokenItem(null, "ETH", "Ethereum", null);
+            else if(tokenSymbol.equalsIgnoreCase("ELAETHSC"))
+                tokenItem = new TokenItem(null, "ELAETHSC", "Elastos evm sidechain", null);
             else if(tokenSymbol.equalsIgnoreCase("ela"))
                 tokenItem = new TokenItem(null, "ELA", "Elastos", null);
-
+            else if(tokenSymbol.equalsIgnoreCase("ioex"))
+                tokenItem = new TokenItem(null, "IOEX", "Ioex", null);
             if (tokenItem != null) {
                 tokenItems.add(tokenItem);
             }

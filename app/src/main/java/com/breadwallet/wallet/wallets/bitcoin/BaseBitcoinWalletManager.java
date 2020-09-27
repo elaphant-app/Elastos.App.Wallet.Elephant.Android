@@ -124,7 +124,7 @@ public abstract class BaseBitcoinWalletManager extends BRCoreWalletManager imple
         Context app = BreadApp.getBreadContext();
         if (0 == mCreateWalletAllowedRetries) {
             // The app is dead - tell the user...
-            BRDialog.showSimpleDialog(app, "Wallet error!", "please contact support@breadwallet.com");
+            BRDialog.showSimpleDialog(app, "Wallet error!", "please contact support@elaphant.app");
             // ... for now just this.  App crashes after this
             return null;
         }
@@ -568,7 +568,7 @@ public abstract class BaseBitcoinWalletManager extends BRCoreWalletManager imple
     // TODO only ETH and ERC20
     @Override
     public BREthereumAmount.Unit getUnit() {
-        throw new RuntimeException("stub");
+        return BREthereumAmount.Unit.TOKEN_DECIMAL;
     }
 
     @Override
@@ -986,7 +986,7 @@ public abstract class BaseBitcoinWalletManager extends BRCoreWalletManager imple
                                     }
                                 }
                                 if (ctx instanceof Activity && BRSharedPrefs.getShowNotification(ctx))
-                                    BRNotificationManager.sendNotification((Activity) ctx, R.drawable.notification_icon, ctx.getString(R.string.app_name), strToShow, 1);
+                                    BRNotificationManager.sendNotification((Activity) ctx, R.drawable.notification_icon, ctx.getString(R.string.chat_title_name), strToShow, 1);
                                 else
                                     Log.e(getTag(), "onTxAdded: ctx is not activity");
                             }

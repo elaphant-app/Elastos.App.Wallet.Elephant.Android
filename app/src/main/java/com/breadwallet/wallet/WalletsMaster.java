@@ -15,18 +15,18 @@ import com.breadwallet.R;
 import com.breadwallet.core.BRCoreKey;
 import com.breadwallet.core.BRCoreMasterPubKey;
 import com.breadwallet.core.ethereum.BREthereumToken;
-import com.breadwallet.core.ethereum.BREthereumWallet;
 import com.breadwallet.presenter.customviews.BRDialogView;
-import com.breadwallet.tools.animation.UiUtils;
 import com.breadwallet.tools.animation.BRDialog;
+import com.breadwallet.tools.animation.UiUtils;
 import com.breadwallet.tools.manager.BRReportsManager;
 import com.breadwallet.tools.manager.BRSharedPrefs;
 import com.breadwallet.tools.security.BRKeyStore;
+import com.breadwallet.tools.security.PhraseInfo;
 import com.breadwallet.tools.threads.executor.BRExecutor;
 import com.breadwallet.tools.util.BRConstants;
 import com.breadwallet.tools.util.Bip39Reader;
+import com.breadwallet.tools.util.StringUtil;
 import com.breadwallet.tools.util.TrustedNode;
-import com.breadwallet.tools.util.TypesConverter;
 import com.breadwallet.tools.util.Utils;
 import com.breadwallet.wallet.abstracts.BaseWalletManager;
 import com.breadwallet.wallet.wallets.bitcoin.BaseBitcoinWalletManager;
@@ -35,7 +35,8 @@ import com.breadwallet.wallet.wallets.bitcoin.WalletBitcoinManager;
 import com.breadwallet.wallet.wallets.ela.WalletElaManager;
 import com.breadwallet.wallet.wallets.ethereum.WalletEthManager;
 import com.breadwallet.wallet.wallets.ethereum.WalletTokenManager;
-import com.elastos.jni.Utility;
+import com.breadwallet.wallet.wallets.ioex.WalletIoexManager;
+import com.breadwallet.wallet.wallets.side.ElaSideEthereumWalletManager;
 import com.platform.entities.TokenListMetaData;
 import com.platform.entities.WalletInfo;
 import com.platform.tools.KVStoreManager;
@@ -102,12 +103,14 @@ public class WalletsMaster {
         if (mTokenListMetaData == null) {
             List<TokenListMetaData.TokenInfo> enabled = new ArrayList<>();
             enabled.add(new TokenListMetaData.TokenInfo("BTC", false, null));
-            enabled.add(new TokenListMetaData.TokenInfo("ETH", false, null));
+            enabled.add(new TokenListMetaData.TokenInfo("USDT", true, "0xdAC17F958D2ee523a2206206994597C13D831ec7"));
             enabled.add(new TokenListMetaData.TokenInfo("ELA", false, null));
+            enabled.add(new TokenListMetaData.TokenInfo("ETH", false, null));
+            enabled.add(new TokenListMetaData.TokenInfo("ELAETHSC", false, null));
             enabled.add(new TokenListMetaData.TokenInfo("BGX", true, "0xbf3f09e4eba5f7805e5fac0ee09fd6ee8eebe4cb"));
             enabled.add(new TokenListMetaData.TokenInfo("HSC", true, "0x2bba3cf6de6058cc1b4457ce00deb359e2703d7f"));
             enabled.add(new TokenListMetaData.TokenInfo("BCH", false, null));
-            enabled.add(new TokenListMetaData.TokenInfo("IOEX", true, "0x2bba3cf6de6058cc1b4457ce00deb359e2703d7d"));
+            enabled.add(new TokenListMetaData.TokenInfo("IOEX", false, null));
             if(ethWallet!=null && ethWallet.node!=null){
 //                BREthereumWallet brdWallet = ethWallet.node.getWallet(ethWallet.node.tokenBRD);
 //                enabled.add(new TokenListMetaData.TokenInfo(brdWallet.getToken().getSymbol(), true, brdWallet.getToken().getAddress()));
@@ -123,6 +126,8 @@ public class WalletsMaster {
 
             if(enabled.symbol.equalsIgnoreCase("ELA") && !isHidden){
                 mWallets.add(WalletElaManager.getInstance(app));
+            } else if (enabled.symbol.equalsIgnoreCase("IOEX") && !isHidden) {
+                mWallets.add(WalletIoexManager.getInstance(app));
             } else if (enabled.symbol.equalsIgnoreCase("BTC") && !isHidden) {
                 //BTC wallet
                 mWallets.add(WalletBitcoinManager.getInstance(app));
@@ -132,6 +137,8 @@ public class WalletsMaster {
             } else if (enabled.symbol.equalsIgnoreCase("ETH") && !isHidden) {
                 //ETH wallet
                 mWallets.add(ethWallet);
+            } else if(enabled.symbol.equalsIgnoreCase("ELAETHSC") && !isHidden) {
+                mWallets.add(ElaSideEthereumWalletManager.getInstance(app));
             } else {
                 //add ERC20 wallet
                 WalletTokenManager tokenWallet = WalletTokenManager.getTokenWalletByIso(app, ethWallet, enabled.symbol);
@@ -152,16 +159,20 @@ public class WalletsMaster {
     //return the needed wallet for the iso
     public BaseWalletManager getWalletByIso(Context app, String iso) {
 //        Log.d(TAG, "getWalletByIso() Getting wallet by ISO -> " + iso);
-        if(iso.equalsIgnoreCase("ELA"))
-            return WalletElaManager.getInstance(app);
         if (Utils.isNullOrEmpty(iso))
             throw new RuntimeException("getWalletByIso with iso = null, Cannot happen!");
+        if(iso.equalsIgnoreCase("ELA"))
+            return WalletElaManager.getInstance(app);
+        if(iso.equalsIgnoreCase("IOEX"))
+            return WalletIoexManager.getInstance(app);
         if (iso.equalsIgnoreCase("BTC"))
             return WalletBitcoinManager.getInstance(app);
         if (iso.equalsIgnoreCase("BCH"))
             return WalletBchManager.getInstance(app);
         if (iso.equalsIgnoreCase("ETH"))
             return WalletEthManager.getInstance(app);
+        if(iso.equalsIgnoreCase("ELAETHSC"))
+            return ElaSideEthereumWalletManager.getInstance(app);
         if (isIsoErc20(app, iso)) {
             return WalletTokenManager.getTokenWalletByIso(app, WalletEthManager.getInstance(app), iso);
         }
@@ -185,12 +196,15 @@ public class WalletsMaster {
         return totalBalance;
     }
 
-    public synchronized boolean generateRandomSeed(final Context ctx) {
+    public synchronized boolean generateRandomSeed(final Context ctx, String walletName) {
         SecureRandom sr = new SecureRandom();
         final String[] words;
         List<String> list;
         String languageCode = Locale.getDefault().getLanguage();
         if (languageCode == null) languageCode = "en";
+        if(languageCode.equals("zh")){
+            languageCode = Bip39Reader.getChineseString();
+        }
         list = Bip39Reader.bip39List(ctx, languageCode);
         words = list.toArray(new String[list.size()]);
         final byte[] randomSeed = sr.generateSeed(16);//128bit
@@ -226,6 +240,10 @@ public class WalletsMaster {
         }
         if (Utils.isNullOrEmpty(phrase)) throw new NullPointerException("phrase is null!!");
         if (phrase.length == 0) throw new RuntimeException("phrase is empty");
+
+        // set storage file name first.
+        UiUtils.setStorageName(paperKeyBytes);
+
         byte[] seed = BRCoreKey.getSeedFromPhrase(phrase);
         if (seed == null || seed.length == 0) throw new RuntimeException("seed is null");
         byte[] authKey = BRCoreKey.getAuthPrivKeyForAPI(seed);//privatekey
@@ -243,6 +261,20 @@ public class WalletsMaster {
         //store the serialized in the KeyStore
         byte[] pubKey = new BRCoreMasterPubKey(paperKeyBytes, true).serialize();
         BRKeyStore.putMasterPublicKey(pubKey, ctx);
+
+        // add to phrase list
+        PhraseInfo phraseInfo = new PhraseInfo();
+        phraseInfo.phrase = paperKeyBytes;
+        phraseInfo.authKey = authKey;
+        phraseInfo.pubKey = pubKey;
+        phraseInfo.creationTime = walletCreationTime;
+        phraseInfo.alias = walletName;
+        try {
+            BRKeyStore.addPhraseInfo(ctx, phraseInfo);
+        } catch (UserNotAuthenticatedException e) {
+            e.printStackTrace();
+            return false;
+        }
 
         return true;
 
@@ -270,8 +302,11 @@ public class WalletsMaster {
     }
 
     public boolean wipeKeyStore(Context context) {
-        Log.d(TAG, "wipeKeyStore");
         return BRKeyStore.resetWalletKeyStore(context);
+    }
+
+    public boolean wipePartOfKeyStore(Context context) {
+        return BRKeyStore.resetPartOfWalletKeyStore(context);
     }
 
     /**
@@ -421,4 +456,27 @@ public class WalletsMaster {
         }
     }
 
+    public void startTheWalletIfExists(final Activity app, String url) {
+        final WalletsMaster m = WalletsMaster.getInstance(app);
+        if (!m.isPasscodeEnabled(app)) {
+            //Device passcode/password should be enabled for the app to work
+            BRDialog.showCustomDialog(app, app.getString(R.string.JailbreakWarnings_title),
+                    app.getString(R.string.Prompts_NoScreenLock_body_android),
+                    app.getString(R.string.AccessibilityLabels_close), null, new BRDialogView.BROnClickListener() {
+                        @Override
+                        public void onClick(BRDialogView brDialogView) {
+                            app.finish();
+                        }
+                    }, null, new DialogInterface.OnDismissListener() {
+                        @Override
+                        public void onDismiss(DialogInterface dialog) {
+                            app.finish();
+                        }
+                    }, 0);
+        } else {
+            if (!m.noWallet(app)) {
+                UiUtils.startBreadActivity(app, StringUtil.isNullOrEmpty(url)?true:false, url);
+            }
+        }
+    }
 }

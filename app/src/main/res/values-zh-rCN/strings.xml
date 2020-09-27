@@ -5,7 +5,7 @@
     <!-- About screen blog label -->
     <string name="About.blog">博客</string>
     <!-- About screen footer -->
-    <string name="About.footer">由 Elastos Application Lab制作。版本%1$s Build %2$s</string>
+    <string name="About.footer">由 Elaphant Team 制作。版本%1$s Build %2$s</string>
     <!-- Privay Policy button label -->
     <string name="About.privacy">隐私政策</string>
     <!-- About screen reddit label -->
@@ -35,7 +35,7 @@
     <!-- Error alert title -->
     <string name="Alert.error">错误</string>
     <!-- Keystore error -->
-    <string name="Alert.keystore.generic.android">您的安卓操作系统密钥库存在问题，请联系support@Elephantwallet.com</string>
+    <string name="Alert.keystore.generic.android">您的安卓操作系统密钥库存在问题，请联系 support@elaphant.app</string>
     <!-- KeyStore error, keys are invalidated -->
     <string name="Alert.keystore.invalidated.android">您的 Elephant 加密数据最近因为您的安卓系统屏幕锁定被禁用而失效。</string>
     <!-- Keystore error title -->
@@ -159,7 +159,7 @@
     <!-- Confirm paper phrase error message -->
     <string name="ConfirmPaperPhrase.error">您输入的单词与助记词 (Recovery Phrase) 不匹配。请重试。</string>
     <!-- Confirm paper phrase view label. -->
-    <string name="ConfirmPaperPhrase.label">为确保一切均被正确地书写，请在您的助记词输入以下文字。</string>
+    <string name="ConfirmPaperPhrase.label">为确保一切均被正确地书写，请在您的助记词中输入以下文字。</string>
     <!-- Word label eg. Word #1, Word #2 -->
     <string name="ConfirmPaperPhrase.word">单词#%1$s</string>
     <!-- Agree to legal terms button -->
@@ -235,9 +235,9 @@
     <!-- (Tap here to) trade (your assets for other assets) -->
     <string name="HomeScreen.trade">首页</string>
     <!-- Checking private key balance progress view text -->
-    <string name="Import.checking">正在查看私人密钥余额...</string>
+    <string name="Import.checking">正在查看私钥余额...</string>
     <!-- Sweep private key confirmation message -->
-    <string name="Import.confirm">从这个私人密钥中发送 %1$s 到您的钱包吗？比特币网络将收到 %2$s 费用。</string>
+    <string name="Import.confirm">从这个私钥中发送 %1$s 到您的钱包吗？比特币网络将收到 %2$s 费用。</string>
     <!-- Duplicate key error message -->
     <string name="Import.Error.duplicate">本私钥已在您的钱包里。</string>
     <!-- empty private key error message -->
@@ -301,15 +301,17 @@
     <!-- Manage wallet modal title -->
     <string name="ManageWallet.title">管理钱包</string>
     <!-- "Add [a] Wallet [to the home screen]" -->
-    <string name="MenuButton.addWallet">添加钱包</string>
+    <string name="MenuButton.addWallet">添加币种</string>
     <!-- Menu button title -->
     <string name="MenuButton.lock">锁住钱包</string>
     <!-- (Click here to) manage (your list of) wallets -->
-    <string name="MenuButton.manageWallets">管理钱包</string>
+    <string name="MenuButton.manageWallets">管理币种</string>
     <!-- (press here to) scan (a) QR code -->
     <string name="MenuButton.scan">扫描QR</string>
     <!-- Menu button title -->
     <string name="MenuButton.security">安全中心</string>
+    <!-- E-sign title -->
+    <string name="MenuButton.e.sign">签名</string>
     <!-- Menu button title -->
     <string name="MenuButton.settings">设置</string>
     <!-- Menu button title -->
@@ -326,6 +328,8 @@
     <string name="NodeSelector.connected">已连接</string>
     <!-- Node is connecting label -->
     <string name="NodeSelector.connecting">正在连接</string>
+    <!-- Node is connect error label -->
+    <string name="NodeSelector.connect.error">连接失败</string>
     <!-- Enter node ip address view body -->
     <string name="NodeSelector.enterBody">输入节点地址</string>
     <!-- Enter Node ip address view title -->
@@ -506,7 +510,7 @@
     <!-- Send money amount label -->
     <string name="Send.amountLabel">金额</string>
     <!-- Balance: $4.00 -->
-    <string name="Send.balance">余额：%1$s</string>
+    <string name="Send.balance">余额 %1$s</string>
     <!-- Instructions how to allow the camera access for the app -->
     <string name="Send.cameraUnavailabeMessage.android">在“设置”&gt;“应用”&gt;“Elephant”&gt;“权限”中允许访问相机</string>
     <!-- Permission required to access camera -->
@@ -526,7 +530,7 @@
     <!-- "(you) can't send (to your)self" -->
     <string name="Send.ethSendSelf">不能发给自己</string>
     <!-- Network Fee: $0.01 -->
-    <string name="Send.fee">网络费%1$s</string>
+    <string name="Send.fee">网络费 %1$s</string>
     <!-- Payee identity not certified alert title. -->
     <string name="Send.identityNotCertified">收款人身份未经认证。</string>
     <!-- Insufficient funds error -->
@@ -664,11 +668,11 @@
     <!-- Add [this item to the list] -->
     <string name="TokenList.add">添加</string>
     <!-- Add Wallets  [to your home screen] -->
-    <string name="TokenList.addTitle">添加钱包</string>
+    <string name="TokenList.addTitle">添加币种</string>
     <!-- Hide [this token from view] -->
     <string name="TokenList.hide">隐藏</string>
     <!-- [click here to] Manage [your] Wallets -->
-    <string name="TokenList.manageTitle">管理钱包</string>
+    <string name="TokenList.manageTitle">管理币种</string>
     <!-- Remove [this item from the list] -->
     <string name="TokenList.remove">移除</string>
     <!-- Show [this item on your home screen] -->
@@ -734,9 +738,9 @@
     <!-- Send status text: 'In progress: 20%' -->
     <string name="Transaction.sendingStatus">进行中：%1$s</string>
     <!-- sending to <address> -->
-    <string name="Transaction.sendingTo">正在发送至 %1$s</string>
+    <string name="Transaction.sendingTo">正在发送</string>
     <!-- sent to <address> -->
-    <string name="Transaction.sentTo">已发送至 %1$s</string>
+    <string name="Transaction.sentTo">已发送</string>
     <!-- eg. Starting balance: $50.00 -->
     <string name="Transaction.starting">期初余额：%1$s</string>
     <!-- e.g. "[The money you paid was a] Fee for token transfer: Elephant" (Elephant is the token that was transfered) -->
@@ -794,11 +798,11 @@
     <!-- received from <address> -->
     <string name="TransactionDetails.receivedFrom">已接收，来自 %1$s</string>
     <!-- received via <address> -->
-    <string name="TransactionDetails.receivedVia">已通过 %1$s 接收</string>
+    <string name="TransactionDetails.receivedVia">收到</string>
     <!-- receiving from <address> -->
     <string name="TransactionDetails.receivingFrom">正在接收，来自 %1$s</string>
     <!-- receiving via <address> -->
-    <string name="TransactionDetails.receivingVia">正在通过 %1$s 接收</string>
+    <string name="TransactionDetails.receivingVia">正在接收</string>
     <!-- "Sent [$5] to [address]" => This is the "Sent [$5]" part. -->
     <string name="TransactionDetails.sent">已发送 %1$s</string>
     <!-- Sent $5.00 -->
@@ -918,7 +922,7 @@
     <!-- Instructions for unlinking the wallet -->
     <string name="WipeWallet.startMessage">解绑钱包可将其从本设备移除。一旦钱包被解绑，您可以启用新钱包，或恢复本设备的其他钱包。</string>
     <!-- Start wipe wallet view warning -->
-    <string name="WipeWallet.startWarning">您无法再在这个设备上使用现在的Elephant钱包。 现在的一切资金都留在助记词上。</string>
+    <string name="WipeWallet.startWarning">您无法再在这个设备上使用现在的Elephant钱包。现在的一切资金都留在助记词上。</string>
     <!-- Unlink this wallet from this device. -->
     <string name="WipeWallet.title">解绑钱包</string>
     <!-- Wipe wallet button title -->
@@ -959,6 +963,7 @@
     <string name="upgrade_cancel">下次</string>
 
     <string name="Did.Will.Get">%1$s 将要获取您的:</string>
+    <string name="MenuButton.moment">我的动态</string>
     <string name="MenuButton.authorizations">授权</string>
     <string name="Did.Authorized">已授权</string>
     <string name="Did.Authorize">授权</string>
@@ -967,6 +972,15 @@
     <string name="Did.Author.Info">授权信息</string>
     <string name="Did.Nick.Name">昵称</string>
     <string name="Did.Public.Key">公钥</string>
+    <string name="Did.Btc.Address">比特币地址</string>
+    <string name="Did.Eth.Address">以太坊地址</string>
+    <string name="Did.Bch.Address">比特现金地址</string>
+    <string name="Did.Ethsc.Address">ELAETHSC地址</string>
+    <string name="Did.Usd.Address">USDT地址</string>
+    <string name="Did.Ela.Address">ELA地址</string>
+    <string name="Did.PhoneNumber">手机号</string>
+    <string name="Did.Email">邮箱</string>
+    <string name="Did.Chinese.ID">中国居民身份证</string>
     <string name="Did.What.Did">DID是什么？</string>
     <string name="Did.Quest">问题</string>
     <string name="Did.Required">必选</string>
@@ -982,9 +996,18 @@
     <string name="Did.Detail.Author.Time">授权时间:</string>
     <string name="Did.Detail.Expiration">过期时间:</string>
     <string name="Did.Detail.Auth.Info">授权信息:</string>
-    <string name="Did.Detail.Nick.Name">- 昵称</string>
-    <string name="Did.Detail.DID">- DID</string>
+    <string name="Did.Detail.DID">- Elastos DID</string>
     <string name="Did.Detail.Public.Key">- 公钥</string>
+    <string name="Did.Detail.Nick.Name">- 昵称</string>
+    <string name="Did.Detail.Ela.Address">- ELA地址</string>
+    <string name="Did.Detail.Btc.Address">- 比特币地址</string>
+    <string name="Did.Detail.Bch.Address">- 比特现金地址</string>
+    <string name="Did.Detail.Eth.Address">- 以太坊地址</string>
+    <string name="Did.Detail.ELAETHSC.Address">- ELAETHSC地址</string>
+    <string name="Did.Detail.Ioex.Address">- IOEX地址</string>
+    <string name="Did.Detail.Email">- 邮箱</string>
+    <string name="Did.Detail.Phone.Number">- 手机号</string>
+    <string name="Did.Detail.Chinese.Id.Card">- 中国身份证</string>
     <string name="User.Not.Author.Message">您的手机系统不支持安卓标准KeyStore技术，而我们用这个技术来存储你的私钥，如果你想继续使用我们的app，请升级手机操作系统到安卓8.0或以上，或者点击继续按钮来允许我们app不经过您的授权即可访问您的keystore信息。</string>
     <string name="User.Not.Author.Exit">退出</string>
     <string name="User.Not.Author.Continue">继续</string>
@@ -1013,6 +1036,217 @@
     <string name="disclaim_ok">我知道了</string>
 
     <string name="invalid_number">无效号码</string>
-    <string name="invalid_email">无效邮件</string>
+    <string name="invalid_email">无效邮箱</string>
     <string name="invalid_id">无效ID</string>
+
+    <string name="explore_menu_about">关于</string>
+    <string name="explore_menu_cancel">取消</string>
+
+    <string name="redpackage_title">红包</string>
+    <string name="vote_title">投票</string>
+    <string name="vote_nodes_count">你正在向%1$d个节点投票(最多36个)</string>
+    <string name="vote_balance">%1$s ELA</string>
+    <string name="vote_hint">投票只需要很少的手续费:%1$s ELA</string>
+    <string name="vote_hint2">投票结束后，您可以随时使用ELA，但您的投票将被取消。</string>
+    <string name="pin_author_vote">授权投票</string>
+    <string name="vote_cancel_btn_txt">取消</string>
+    <string name="vote_confirm_btn_txt">确认</string>
+    <string name="votes_ela">票数:(ELA)</string>
+    <string name="vote_wallet_balance_title">钱包余额:</string>
+    <string name="pin_author_vote_msg">请输入PIN码授权投票</string>
+
+    <string name="loading_hint">请稍候....</string>
+    <string name="auto_dpos_hint">自动使用ELA余额DPoS投票</string>
+    <string name="explore_vote_about_desc1">ELA投票</string>
+    <string name="explore_vote_about_desc2">投票小程序允许你每次最多投给36个DPoS超级节点。</string>
+    <string name="vote_balance_not_insufficient">ELA余额少于1</string>
+    <string name="vote_candidates_is_none">候选人列表为空</string>
+    <string name="beyond_max_vote_node">最多36个节点</string>
+    <string name="redpackage_hint1">红包</string>
+    <string name="redpackage_hint2">使用ELA红包小程序，你可以给好友发ELA红包啦!</string>
+    <string name="exchange_hint1">SWFT</string>
+    <string name="exchange_hint2">SWFT Blockchain是“下一代区块链全球转移协议”。专注于整合全球主流交易所和区块链项目，以有效对冲风险，并为客户提供一个高效、易用的加密货币兑换平台。</string>
+    <string name="double_spend">您有另外一笔交易正在处理，请在2分钟后重试</string>
+
+    <string name="sign_signature_request_title">签名请求</string>
+    <string name="sign_request_information">请求信息:</string>
+    <string name="sign_developer_did">开发者DID</string>
+    <string name="sign_timestamp">时间戳</string>
+    <string name="sign_purpose">用途</string>
+    <string name="sign_content">内容</string>
+    <string name="sign_add_limitation">添加限制</string>
+    <string name="sign_view_all_detail">显示详情</string>
+    <string name="sign_sign_btn">签名</string>
+    <string name="node_list_title">%1$d个节点列表:</string>
+
+    <string name="explore_mini_app_title">我的小程序</string>
+    <string name="explore_pop_edit">编辑</string>
+    <string name="explore_pop_add_by_url">通过URL添加</string>
+    <string name="explore_pop_scan_to_add">扫描添加</string>
+    <string name="explore_pop_remove">删除</string>
+    <string name="explore_pop_share">分享应用</string>
+    <string name="explore_pop_about">关于%1$s</string>
+    <string name="explore_pop_cancel">取消</string>
+    <string name="explore_pop_done">完成</string>
+    <string name="explore_delete_app_hint">你确定删除这个小程序吗?</string>
+
+    <string name="explore_about_developer">开发者:%1$s</string>
+    <string name="multisign_deny">拒绝</string>
+    <string name="multisign_approve">批准</string>
+    <string name="multisign_approve_send">批准并付款</string>
+    <string name="multisign_spend">付款方：</string>
+    <string name="multisign_accept">收款方：</string>
+    <string name="multisign_signed_title">%2$d个私钥中至少需要%1$d个批准后才能付款。</string>
+    <string name="multisign_toolbar_title">审批请求</string>
+    <string name="multisign_spend_desc">正在通过一个多签钱包花费</string>
+    <string name="multisign_balance">余额：</string>
+    <string name="multisign_approved">你已经成功批准了付款请求。</string>
+    <string name="multisign_pass_next">请将请求发给下一个人继续审批。</string>
+    <string name="multisign_share_qrcode">分享二维码</string>
+    <string name="multisign_share_or">--- 或 ---</string>
+    <string name="multisign_share_json">分享json文件</string>
+    <string name="multisign_approved_title">审批通过</string>
+    <string name="multisign_send_succeeded">这笔付款已经执行。</string>
+    <string name="multisign_wallet_creation">创建多签钱包</string>
+    <string name="multisign_create">创建</string>
+    <string name="multisign_create_desc">正在创建一个多签钱包</string>
+    <string name="multisign_created">钱包已创建</string>
+    <string name="multisign_create_addr">钱包地址</string>
+    <string name="multisign_create_keys">公钥总数：%1$d</string>
+    <string name="multisign_create_unlock_keys">审批需要私钥数：%1$d</string>
+    <string name="multisign_create_failed_title">失败</string>
+    <string name="multisign_create_failed">创建失败，请重试</string>
+    <string name="multisign_wallet_pubkey_me">(我)</string>
+    <string name="multisign_create_pubkey_not_in_list">创建钱包失败，因为您的公钥不在批准列表里。</string>
+    <string name="multisign_wallet_not_created">多签钱包还没创建成功，请稍后重试。</string>
+    <string name="multisign_tx_pubkey_not_in_list">您的公钥不在批准列表里，请查看你的公钥或切换到正确的钱包。</string>
+    <string name="esign_title">签名</string>
+    <string name="esign_doc_to_sign">签名内容</string>
+    <string name="esign_doc_to_signed">已签名内容</string>
+    <string name="esign_agreement">点击“签名”按钮，即代表您确认使用个人签名对此文档进行电子签名。</string>
+    <string name="esign_detail_title">签名详情</string>
+    <string name="esign_history_title">签名历史</string>
+    <string name="esign_sign_btn">签名</string>
+    <string name="esign_paste_btn">粘贴</string>
+    <string name="esign_success_title">签名</string>
+    <string name="esign_success_hint">签名成功</string>
+    <string name="esign_success_copy">复制</string>
+    <string name="esign_copy_to_clipboard">已复制到粘贴板</string>
+    <string name="esign_remove_nini_app_hint">你确定删除<Data><![CDATA[<font color="#ff3365">%1$s</font>]]></Data>?</string>
+    <string name="esign_load_no">否</string>
+    <string name="esign_load_yes">是</string>
+    <string name="esign_load_mini_app_hint">您确定要加载<Data><![CDATA[<font color="#ff3365">%1$s</font>]]></Data> 小应用吗？</string>
+    <string name="mini_app_dialog_remove">删除</string>
+    <string name="esign_please_contnet_empty_hint">请输入加密内容。</string>
+
+    <string name="mini_app_app_id">小程序ID</string>
+    <string name="mini_app_website">网站</string>
+    <string name="mini_app_name">名称</string>
+    <string name="mini_app_publickey">公钥</string>
+    <string name="mini_app_category">分类</string>
+    <string name="mini_app_platform">平台</string>
+    <string name="mini_app_version">版本</string>
+    <string name="mini_app_shortdesc">概述</string>
+
+    <string name="mini_app_invalid_url">无效url</string>
+
+    <string name="history_loading_hint">正在加载更多的数据...</string>
+    <string name="history_load_no_data">已经全部加载完毕</string>
+    <string name="history_pull_refresh_hint">点击或上拉加载更多</string>
+
+    <string name="net_has_disconnect">网络已断开</string>
+
+    <string name="multi_wallet_switch">切换钱包</string>
+    <string name="multi_wallet_new">+ 新增钱包</string>
+    <string name="multi_wallet_name">钱包名称</string>
+    <string name="multi_wallet_name_hint">钱包名称</string>
+    <string name="multi_wallet_name_save">保存</string>
+    <string name="multi_wallet_name_next">下一步</string>
+    <string name="multi_wallet_name_required">请输入钱包名称</string>
+    <string name="multi_wallet_format_date">MM月d日, yyyy</string>
+    <string name="multi_wallet_phares_not_backup">还未备份助记词</string>
+    <string name="multi_wallet_already_current">已经是当前助记词</string>
+    <string name="utxo_too_much_hint">由于UTXO过多，您的交易将被拆分成多笔，请注意查看交易记录。</string>
+
+    <string name="send_memo_hint">Memo信息会上链</string>
+    <string name="Clear_cache_title">清除缓存</string>
+
+    <string name="txid_copy_hint">txid:%1$s</string>
+    <string name="txid_copy_tv">拷贝</string>
+
+    <string name="clear_cache_message">确认清除缓存吗？</string>
+    <string name="clear_cache_positive_btn">确定</string>
+    <string name="clear_cache_negative_btn">取消</string>
+
+    <string name="elapay_request_params_error">请求参数错误</string>
+
+    <string name="My_chat_title">聊天</string>
+    <string name="My_chat_tab_message_title">消息</string>
+    <string name="My_chat_tab_friends_title">好友</string>
+
+    <string name="My_add_friend">添加好友</string>
+    <string name="My_chat_add_device">加好友</string>
+    <string name="My_chat_join_group">入群</string>
+    <string name="My_chat_qr_code">我的QR</string>
+    <string name="My_qr_code_title">我的QR</string>
+    <string name="My_new_friends_title">新的朋友</string>
+
+    <string name="My_chat_pop_title">设置聊天昵称</string>
+    <string name="My_chat_pop_hint">输入昵称</string>
+    <string name="My_chat_pop_store_hint">昵称将存储在区块链上。</string>
+
+    <string name="My_chat_pop_cancel">取消</string>
+    <string name="My_chat_pop_set_now">立即设置</string>
+
+    <string name="My_chat_scan_hint">输入DID或Carrier地址</string>
+    <string name="My_chat_scan_paste">粘贴</string>
+    <string name="My_chat_QR_hint">扫码加我为好友</string>
+
+    <string name="My_chat_new_accept">接受</string>
+    <string name="My_chat_new_waitforaccept">等待接受</string>
+    <string name="My_chat_new_accepted">已接受</string>
+
+    <string name="My_chat_friends_send_token">转账</string>
+    <string name="My_chat_friends_message">消息</string>
+    <string name="My_chat_friends_edit">编辑</string>
+    <string name="My_chat_friends_delete">删除</string>
+
+    <string name="My_chat_nickname_title">昵称</string>
+    <string name="My_chat_nickname_save">保存</string>
+
+    <string name="My_chat_detail_send">发送</string>
+
+    <string name="My_chat_friends_delete_pop_hint">将删除联系人<Data><![CDATA[<font color="#ff3365">%1$s</font>]]></Data>，同时删除与该联系人的聊天记录。</string>
+    <string name="My_chat_friends_delete_pop_cancel">取消</string>
+    <string name="My_chat_friends_delete_pop_confirm">确认</string>
+
+    <string name="My_chat_edit_nickname_empty_toast">昵称不能为空</string>
+
+    <string name="My_chat_scan_pop_title">设置聊天好友昵称</string>
+    <string name="My_chat_scan_pop_hint">输入好友昵称</string>
+
+    <string name="My_qr_switch_btn_did">DID</string>
+    <string name="My_qr_switch_btn_carrier_addr">Carrier地址</string>
+
+    <string name="My_scan_has_add_friend">你已经添加了该好友</string>
+    <string name="My_scan_switch_btn_hint">显示carrier地址</string>
+
+    <string name="crc_auto_vote_hint">自动使用ELA余额CRC投票</string>
+    <string name="crc_vote_hint">您将要投票</string>
+    <string name="crc_votes">票数:（ELA）</string>
+    <string name="crc_members_title">CR 理事会成员详情:</string>
+    <string name="crc_view_all">查看所有</string>
+    <string name="crc_vote_dpos_nodes">%1$d 个节点(DPoS)</string>
+    <string name="crc_vote_crc_nodes">%1$d 理事会成员(CR)</string>
+    <string name="crc_header_members_title">详情</string>
+
+    <string name="crc_scheme_candidate_must_not_empty">Candidate参数不能为空</string>
+    <string name="crc_scheme_candidate_parse_error">Candidate无法解析</string>
+    <string name="crc_scheme_votes_parse_error">Votes无法解析</string>
+    <string name="crc_scheme_votes_must_not_empty">Votes参数不能为空</string>
+    <string name="crc_scheme_votes_duplicate_did">Candidate参数存在重复DID</string>
+    <string name="crc_scheme_votes_total_out">Votes所有参数值的和不能超过100</string>
+    <string name="crc_scheme_candidate_and_votes_inconsistent">Candidate参数的个数和Votes参数的个数不一致</string>
+    <string name="crc_scheme_inactive_did">参数里有未激活的DID</string>
+    <string name="crc_scheme_votes_must_positive">Votes参数应为正数</string>
 </resources>

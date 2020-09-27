@@ -29,6 +29,7 @@ import java.util.List;
 public class History {
     public String Txid;
     public String Type;
+    public String TxType;
     public String Value;
     public int CreateTime;
     public int Height;
@@ -36,5 +37,7 @@ public class History {
     public String Memo;
     public List<String> Inputs;
     public List<String> Outputs;
-
+    public long NodeOutputIndex;
+    public long NodeFee;
+    public String Status;
 }

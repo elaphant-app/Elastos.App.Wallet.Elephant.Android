@@ -16,6 +16,7 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
@@ -23,23 +24,37 @@ import com.breadwallet.R;
 import com.breadwallet.core.ethereum.BREthereumAmount;
 import com.breadwallet.core.ethereum.BREthereumToken;
 import com.breadwallet.core.ethereum.BREthereumTransaction;
+import com.breadwallet.presenter.activities.crc.CrcDataSource;
+import com.breadwallet.presenter.activities.crc.FlowLayout;
 import com.breadwallet.presenter.customviews.BaseTextView;
 import com.breadwallet.presenter.entities.CurrencyEntity;
 import com.breadwallet.presenter.entities.TxUiHolder;
+import com.breadwallet.tools.adapter.TxProducerAdapter;
+import com.breadwallet.tools.animation.UiUtils;
 import com.breadwallet.tools.manager.BRClipboardManager;
 import com.breadwallet.tools.manager.BRSharedPrefs;
 import com.breadwallet.tools.manager.TxManager;
+import com.breadwallet.tools.threads.executor.BRExecutor;
 import com.breadwallet.tools.util.BRConstants;
 import com.breadwallet.tools.util.BRDateUtil;
 import com.breadwallet.tools.util.CurrencyUtils;
+import com.breadwallet.tools.util.StringUtil;
 import com.breadwallet.tools.util.Utils;
+import com.breadwallet.vote.CrcEntity;
+import com.breadwallet.vote.CrcTxEntity;
 import com.breadwallet.wallet.WalletsMaster;
 import com.breadwallet.wallet.abstracts.BaseWalletManager;
+import com.breadwallet.wallet.wallets.ela.ElaDataSource;
+import com.breadwallet.wallet.wallets.ela.ElaDataUtils;
+import com.breadwallet.wallet.wallets.ela.data.DposProducer;
 import com.breadwallet.wallet.wallets.ethereum.WalletEthManager;
 import com.platform.entities.TxMetaData;
 import com.platform.tools.KVStoreManager;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by byfieldj on 2/26/18.
@@ -93,6 +108,14 @@ public class FragmentTxDetails extends DialogFragment {
 
     private ImageButton mCloseButton;
     private LinearLayout mDetailsContainer;
+
+    private BaseTextView mDposTitleTv;
+    private BaseTextView mPaseTv;
+    private ListView mDposLv;
+    private View mDposLine;
+    private FlowLayout mFlowLt;
+    private View mCrcLayout;
+    private View mViewAllTv;
 
     boolean mDetailsShowing = false;
 
@@ -154,6 +177,14 @@ public class FragmentTxDetails extends DialogFragment {
         mGasLimitContainer = rootView.findViewById(R.id.gas_limit_container);
         mWhenSentLabel = rootView.findViewById(R.id.label_when_sent);
 
+        mDposTitleTv = rootView.findViewById(R.id.vote_nodes_list_title);
+        mPaseTv = rootView.findViewById(R.id.transaction_detail_vote_paste_tv);
+        mDposLv = rootView.findViewById(R.id.transaction_detail_vote_node_lv);
+        mDposLine = rootView.findViewById(R.id.divider10);
+        mFlowLt = rootView.findViewById(R.id.numbers_flow_layout);
+        mCrcLayout = rootView.findViewById(R.id.second_card);
+        mViewAllTv = rootView.findViewById(R.id.view_all_members);
+
         mCloseButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -161,6 +192,35 @@ public class FragmentTxDetails extends DialogFragment {
             }
         });
 
+        mMemoText.setImeOptions(EditorInfo.IME_ACTION_DONE);
+        int color = mToFromAddress.getTextColors().getDefaultColor();
+        mMemoText.setTextColor(color);
+
+        initListener();
+        updateUi();
+        initDposAdapter();
+//        initCrcAdapter();
+
+        int crcType = ElaDataUtils.getVoteType(mTransaction.getType(), mTransaction.getTxType());
+        if(crcType==2 || crcType==3) {
+            BRExecutor.getInstance().forLightWeightBackgroundTasks().execute(new Runnable() {
+                @Override
+                public void run() {
+                    CrcDataSource.getInstance(getContext()).getCrcPayload(mTransaction.txReversed);
+                    BRExecutor.getInstance().forMainThreadTasks().execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            initCrcAdapter();
+                        }
+                    });
+                }
+            });
+        }
+
+        return rootView;
+    }
+
+    private void initListener(){
         mShowHide.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -176,12 +236,36 @@ public class FragmentTxDetails extends DialogFragment {
             }
         });
 
-        mMemoText.setImeOptions(EditorInfo.IME_ACTION_DONE);
-        int color = mToFromAddress.getTextColors().getDefaultColor();
-        mMemoText.setTextColor(color);
+        mPaseTv.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                copyText();
+            }
+        });
 
-        updateUi();
-        return rootView;
+        mViewAllTv.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                List<CrcTxEntity.Candidates> candidates = CrcDataSource.getInstance(getContext()).queryCrcPayload(mTransaction.txReversed);
+                List<String> candidateLt = new ArrayList<>();
+                List<String> voteLt = new ArrayList<>();
+                for(CrcTxEntity.Candidates candidate : candidates) {
+                    candidateLt.add(candidate.candidate);
+                    voteLt.add(candidate.votes);
+                }
+                UiUtils.startCrcMembersActivity(getContext(), "FragmentTxDetails", candidateLt.toString(), voteLt.toString());
+            }
+        });
+    }
+
+    private void copyText() {
+        StringBuilder sb = new StringBuilder();
+        if(mProducers==null || mProducers.size()<=0) return;
+        for(DposProducer dposProducer : mProducers){
+            sb.append(dposProducer.Nickname).append("\n");
+        }
+        BRClipboardManager.putClipboard(getContext(), sb.toString());
+        Toast.makeText(getContext(), getString(R.string.Receive_copied), Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -191,6 +275,60 @@ public class FragmentTxDetails extends DialogFragment {
 
     public void setTransaction(TxUiHolder item) {
         this.mTransaction = item;
+    }
+
+    private List<DposProducer> mProducers = new ArrayList<>();
+    private void initDposAdapter(){
+        if(mTransaction==null) return;
+        List<DposProducer> tmp = ElaDataSource.getInstance(getContext()).queryDposProducer(mTransaction.txReversed);
+        if(tmp!=null && tmp.size()>0) {
+            mDposTitleTv.setVisibility(View.VISIBLE);
+            mPaseTv.setVisibility(View.VISIBLE);
+            mDposLv.setVisibility(View.VISIBLE);
+
+            mProducers.clear();
+            mProducers.addAll(tmp);
+            mDposTitleTv.setText(String.format(getString(R.string.node_list_title), tmp.size()));
+            mDposLv.setAdapter(new TxProducerAdapter(getContext(), mProducers));
+        } else {
+            mDposTitleTv.setVisibility(View.GONE);
+            mPaseTv.setVisibility(View.GONE);
+            mDposLv.setVisibility(View.GONE);
+            mDposLine.setVisibility(View.GONE);
+        }
+    }
+
+    private void initCrcAdapter() {
+        if(mTransaction !=null) {
+            List<CrcTxEntity.Candidates> payloads = CrcDataSource.getInstance(getContext()).queryCrcPayload(mTransaction.txReversed);
+            List<String> candidates = new ArrayList<>();
+            List<String> votes = new ArrayList<>();
+            for(CrcTxEntity.Candidates candidate : payloads) {
+                candidates.add(candidate.candidate);
+                votes.add(candidate.votes);
+            }
+
+            mCrcLayout.setVisibility(View.VISIBLE);
+            List<CrcEntity> crcEntities = CrcDataSource.getInstance(getContext()).queryCrcsByIds(candidates);
+            if(null!=crcEntities && crcEntities.size()>0) {
+                CrcDataSource.getInstance(getContext()).updateCrcsArea(crcEntities);
+                mFlowLt.setAdapter(crcEntities, R.layout.crc_member_layout, new FlowLayout.ItemView<CrcEntity>() {
+                    @Override
+                    protected void getCover(CrcEntity item, FlowLayout.ViewHolder holder, View inflate, int position) {
+                        holder.setText(R.id.tv_label_name, item.Nickname);
+//                        String languageCode = Locale.getDefault().getLanguage();
+//                        if (!StringUtil.isNullOrEmpty(languageCode) && languageCode.contains("zh")) {
+//                            holder.setText(R.id.tv_label_name, item.Nickname + " | " + item.AreaZh);
+//                        } else {
+//                            holder.setText(R.id.tv_label_name, item.Nickname + " | " + item.AreaEn);
+//                        }
+                    }
+                });
+
+                return;
+            }
+        }
+        mCrcLayout.setVisibility(View.GONE);
     }
 
     private void updateUi() {
@@ -222,7 +360,11 @@ public class FragmentTxDetails extends DialogFragment {
                 BigDecimal rawFee = mTransaction.getFee();
                 //meaning ETH
                 if (ethTx != null && !isErc20) {
-                    mGasPrice.setText(String.format("%s %s", new BigDecimal(ethTx.getGasPrice(BREthereumAmount.Unit.ETHER_GWEI)).stripTrailingZeros().toPlainString(), "gwei"));
+                    if(cryptoIso.equalsIgnoreCase("ELAETHSC")) {
+                        mGasPrice.setText(String.format("%s %s", new BigDecimal(ethTx.getGasPrice(BREthereumAmount.Unit.ETHER_ETHER)).stripTrailingZeros().toPlainString(), "ELA"));
+                    } else {
+                        mGasPrice.setText(String.format("%s %s", new BigDecimal(ethTx.getGasPrice(BREthereumAmount.Unit.ETHER_GWEI)).stripTrailingZeros().toPlainString(), "gwei"));
+                    }
                     mGasLimit.setText(new BigDecimal(ethTx.getGasLimit()).toPlainString());
                     long gas = ethTx.isConfirmed() ? ethTx.getGasUsed() : ethTx.getGasLimit();
                     rawFee = new BigDecimal(gas).multiply(new BigDecimal(ethTx.getGasPrice(walletManager.getUnit())));
@@ -300,7 +442,12 @@ public class FragmentTxDetails extends DialogFragment {
             mTxAction.setText(!received ? getString(R.string.TransactionDetails_titleSent) : getString(R.string.TransactionDetails_titleReceived));
             mToFrom.setText(!received ? getString(R.string.Confirmation_to) + " " : getString(R.string.TransactionDetails_addressViaHeader) + " ");
 
-            mToFromAddress.setText(walletManager.decorateAddress(received?mTransaction.getFrom():mTransaction.getTo())); //showing only the destination address
+            String from = mTransaction.getFrom();
+            if(StringUtil.isNullOrEmpty(from)){
+                mToFromAddress.setText(mTransaction.getTo());
+            } else {
+                mToFromAddress.setText(walletManager.decorateAddress(received?mTransaction.getFrom():mTransaction.getTo())); //showing only the destination address
+            }
 
             // Allow the to/from address to be copyable
             mToFromAddress.setOnClickListener(new View.OnClickListener() {
@@ -331,7 +478,7 @@ public class FragmentTxDetails extends DialogFragment {
             String memo;
             mTxMetaData = KVStoreManager.getInstance().getTxMetaData(app, mTransaction.getTxHash());
 
-            if(walletManager.getIso().equalsIgnoreCase("ELA")){
+            if(walletManager.getIso().equalsIgnoreCase("ELA") || walletManager.getIso().equalsIgnoreCase("IOEX")){
                 mMemoText.setText(mTransaction.memo);
             } else if (mTxMetaData != null) {
                 if (mTxMetaData.comment != null) {
@@ -427,7 +574,9 @@ public class FragmentTxDetails extends DialogFragment {
         // Update the memo field on the transaction and save it
         if (mTxMetaData == null) mTxMetaData = new TxMetaData();
         mTxMetaData.comment = mMemoText.getText().toString();
-        KVStoreManager.getInstance().putTxMetaData(getContext(), mTxMetaData, mTransaction.getTxHash());
+        if(null != mTransaction){
+            KVStoreManager.getInstance().putTxMetaData(getContext(), mTxMetaData, mTransaction.getTxHash());
+        }
         mTxMetaData = null;
 
         // Hide softkeyboard if it's visible

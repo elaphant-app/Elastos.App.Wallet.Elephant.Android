@@ -35,7 +35,7 @@
   <!-- Error alert title -->
   <string name="Alert.error">Fehler</string>
   <!-- Keystore error -->
-  <string name="Alert.keystore.generic.android">Es liegt ein Problem mit dem KeyStore Ihres Android-Betriebssystems vor, bitte wenden Sie sich an support@Elephantwallet.com</string>
+  <string name="Alert.keystore.generic.android">Es liegt ein Problem mit dem KeyStore Ihres Android-Betriebssystems vor, bitte wenden Sie sich an support@elaphant.app</string>
   <!-- KeyStore error, keys are invalidated -->
   <string name="Alert.keystore.invalidated.android">Ihre mit Elephant verschlüsselten Daten wurden vor Kurzem für ungültig erklärt, da Ihre Android-Bildschirmsperre deaktiviert war.</string>
   <!-- Keystore error title -->
@@ -524,7 +524,7 @@
   <!-- "(you) can't send (to your)self" -->
   <string name="Send.ethSendSelf">Sie können nichts an sich selbst versenden.</string>
   <!-- Network Fee: $0.01 -->
-  <string name="Send.fee">Netzwerkgebühr: %1$s</string>
+  <string name="Send.fee">Netzwerkgebühr %1$s</string>
   <!-- Payee identity not certified alert title. -->
   <string name="Send.identityNotCertified">die Identität des Zahlungsempfängers ist nicht bestätigt.</string>
   <!-- Insufficient funds error -->
@@ -734,7 +734,7 @@
   <!-- sending to <address> -->
   <string name="Transaction.sendingTo">wird gesendet an %1$s</string>
   <!-- sent to <address> -->
-  <string name="Transaction.sentTo">gesendet an %1$s</string>
+  <string name="Transaction.sentTo">gesendet an</string>
   <!-- eg. Starting balance: $50.00 -->
   <string name="Transaction.starting">Startguthaben: %1$s</string>
   <!-- e.g. "[The money you paid was a] Fee for token transfer: BRD" (BRD is the token that was transfered) -->

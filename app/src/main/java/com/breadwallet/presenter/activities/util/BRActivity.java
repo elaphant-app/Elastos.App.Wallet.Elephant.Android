@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Point;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
@@ -11,19 +12,18 @@ import android.util.Log;
 import com.breadwallet.BreadApp;
 import com.breadwallet.R;
 import com.breadwallet.presenter.activities.DisabledActivity;
-import com.breadwallet.presenter.activities.ExploreWebActivity;
 import com.breadwallet.presenter.activities.HomeActivity;
 import com.breadwallet.presenter.activities.InputPinActivity;
 import com.breadwallet.presenter.activities.InputWordsActivity;
 import com.breadwallet.presenter.activities.WalletActivity;
-import com.breadwallet.presenter.activities.did.DidAuthorizeActivity;
-import com.breadwallet.presenter.activities.did.DidQuestionActivity;
+import com.breadwallet.presenter.activities.WalletNameActivity;
 import com.breadwallet.presenter.activities.intro.IntroActivity;
 import com.breadwallet.presenter.activities.intro.RecoverActivity;
 import com.breadwallet.presenter.activities.intro.WriteDownActivity;
-import com.breadwallet.tools.animation.UiUtils;
 import com.breadwallet.tools.animation.BRDialog;
+import com.breadwallet.tools.animation.UiUtils;
 import com.breadwallet.tools.manager.BRApiManager;
+import com.breadwallet.tools.manager.BRPublicSharedPrefs;
 import com.breadwallet.tools.manager.BRSharedPrefs;
 import com.breadwallet.tools.manager.InternetManager;
 import com.breadwallet.tools.security.AuthManager;
@@ -35,11 +35,10 @@ import com.breadwallet.tools.util.StringUtil;
 import com.breadwallet.tools.util.Utils;
 import com.breadwallet.wallet.WalletsMaster;
 import com.breadwallet.wallet.util.CryptoUriParser;
+import com.elastos.jni.UriFactory;
+import com.elastos.jni.utils.SchemeStringUtils;
 import com.platform.HTTPServer;
 import com.platform.tools.BRBitId;
-
-import org.wallet.library.AuthorizeManager;
-import org.wallet.library.entity.UriFactory;
 
 /**
  * BreadWallet
@@ -69,6 +68,7 @@ public class BRActivity extends FragmentActivity implements BreadApp.OnAppBackgr
     private static final String TAG = BRActivity.class.getName();
     public static final Point screenParametersPoint = new Point();
     private static final String PACKAGE_NAME = BreadApp.getBreadContext() == null ? null : BreadApp.getBreadContext().getApplicationContext().getPackageName();
+    protected static HomeActivity mHomeActivity;
 
     static {
         try {
@@ -185,7 +185,7 @@ public class BRActivity extends FragmentActivity implements BreadApp.OnAppBackgr
                     BRExecutor.getInstance().forLightWeightBackgroundTasks().execute(new Runnable() {
                         @Override
                         public void run() {
-                            PostAuth.getInstance().onPhraseCheckAuth(BRActivity.this, true);
+                            PostAuth.getInstance().onPhraseCheckAuth(BRActivity.this, true, false);
                         }
                     });
                 }
@@ -195,17 +195,22 @@ public class BRActivity extends FragmentActivity implements BreadApp.OnAppBackgr
                     BRExecutor.getInstance().forLightWeightBackgroundTasks().execute(new Runnable() {
                         @Override
                         public void run() {
-                            PostAuth.getInstance().onPhraseProveAuth(BRActivity.this, true);
+                            PostAuth.getInstance().onPhraseProveAuth(BRActivity.this, true, false);
                         }
                     });
                 }
                 break;
             case BRConstants.PUT_PHRASE_RECOVERY_WALLET_REQUEST_CODE:
                 if (resultCode == RESULT_OK) {
+                    final boolean restart = BRPublicSharedPrefs.getRecoverNeedRestart(BRActivity.this);
+                    final boolean recover = BRPublicSharedPrefs.getIsRecover(BRActivity.this);
+                    final String walletName = BRPublicSharedPrefs.getRecoverWalletName(BRActivity.this);
                     BRExecutor.getInstance().forLightWeightBackgroundTasks().execute(new Runnable() {
                         @Override
                         public void run() {
-                            PostAuth.getInstance().onRecoverWalletAuth(BRActivity.this, true);
+                            PostAuth.getInstance().onRecoverWalletAuth(BRActivity.this,
+                                    true, restart, recover,
+                                    StringUtil.isNullOrEmpty(walletName) ? UiUtils.getDefaultWalletName(BRActivity.this) : walletName);
                         }
                     });
                 } else {
@@ -224,7 +229,15 @@ public class BRActivity extends FragmentActivity implements BreadApp.OnAppBackgr
                                 e.printStackTrace();
                             }
                             String result = data.getStringExtra("result");
-                            if (CryptoUriParser.isCryptoUrl(BRActivity.this, result))
+                            String type = data.getStringExtra("type");
+                            if(!StringUtil.isNullOrEmpty(type)) {
+                                if(StringUtil.isNullOrEmpty(result)) return;
+                                if(type.equals(BRConstants.CHAT_SINGLE_TYPE)) {
+                                    mHomeActivity.showChatFragment(result);
+                                } else {
+                                    UiUtils.startGroupNameActivity(BRActivity.this, result);
+                                }
+                            } else if (CryptoUriParser.isCryptoUrl(BRActivity.this, result))
                                 CryptoUriParser.processRequest(BRActivity.this, result,
                                         WalletsMaster.getInstance(BRActivity.this).getCurrentWallet(BRActivity.this));
                             else if (BRBitId.isBitId(result))
@@ -242,7 +255,8 @@ public class BRActivity extends FragmentActivity implements BreadApp.OnAppBackgr
                     BRExecutor.getInstance().forLightWeightBackgroundTasks().execute(new Runnable() {
                         @Override
                         public void run() {
-                            PostAuth.getInstance().onCreateWalletAuth(BRActivity.this, true);
+                            PostAuth.getInstance().onCreateWalletAuth(BRActivity.this,
+                                    true, false, UiUtils.getDefaultWalletName(BRActivity.this));
                         }
                     });
 
@@ -258,7 +272,7 @@ public class BRActivity extends FragmentActivity implements BreadApp.OnAppBackgr
                     boolean isPinAccepted = data.getBooleanExtra(InputPinActivity.EXTRA_PIN_ACCEPTED, false);
                     if (isPinAccepted) {
                         if (Utils.isNullOrEmpty(BRKeyStore.getMasterPublicKey(this))) {
-                            PostAuth.getInstance().onCreateWalletAuth(this, false);
+                            UiUtils.startWalletNameActivity(this, WalletNameActivity.WALLET_NAME_TYPE_NEW, false);
                         } else {
                             UiUtils.startBreadActivity(this, false);
                         }
@@ -268,16 +282,49 @@ public class BRActivity extends FragmentActivity implements BreadApp.OnAppBackgr
                 }
                 break;
 
-            case BRConstants.SCANNER_DID_REQUEST:
+            case BRConstants.SCANNER_DID_OR_ADD_REQUEST:
                 if (resultCode == Activity.RESULT_OK) {
-                    final String mUri = data.getStringExtra("result");
-                    if(StringUtil.isNullOrEmpty(mUri)) return;
-                    if(mUri.contains("redpacket")){
-                        UiUtils.startWebviewActivity(this, "https://redpacket.elastos.org");
-                    } else if(mUri.contains("identity")) {
-                        AuthorizeManager.startWalletActivity(BRActivity.this, mUri, "com.breadwallet.presenter.activities.did.DidAuthorizeActivity");
-                    } else if(mUri.contains("elapay")) {
-                        AuthorizeManager.startWalletActivity(BRActivity.this, mUri, "com.breadwallet.presenter.activities.WalletActivity");
+                    String url = data.getStringExtra("result");
+                    if(StringUtil.isNullOrEmpty(url)) return;
+
+                    UriFactory uri = new UriFactory(url);
+                    String scheme = uri.getScheme();
+                    String host = uri.getHost();
+                    if (!SchemeStringUtils.isNullOrEmpty(scheme) && !SchemeStringUtils.isNullOrEmpty(host)) {
+                        if(scheme.equals("elaphant") || scheme.equals("elastos")) {
+                            switch (host) {
+                                case "multitx":
+                                    UiUtils.startMultiTxActivity(this, Uri.parse(url));
+                                    return;
+                                case "multicreate":
+                                    UiUtils.startMultiCreateActivity(this, Uri.parse(url));
+                                    return;
+                                case "identity":
+                                    UiUtils.startAuthorActivity(this, url);
+                                    return;
+                                case "elapay":
+                                    UiUtils.startWalletActivity(this, url);
+                                    return;
+                                case "sign":
+                                    UiUtils.startSignActivity(this, url);
+                                    return;
+                                case "eladposvote":
+                                case "elacrcvote":
+                                    UiUtils.startCrcActivity(this, url);
+                                    return;
+                                default:
+                                    if(mHomeActivity != null) {
+                                        mHomeActivity.showAndDownloadCapsule(url);
+                                    } else {
+                                        UiUtils.startBreadActivity(this, true);
+                                    }
+                                    break;
+                            }
+                        } else {
+                            mHomeActivity.showAndDownloadCapsule(url);
+                        }
+                    } else {
+                        mHomeActivity.showAndDownloadCapsule(url);
                     }
                 }
                 break;

@@ -31,6 +31,33 @@ public class UpgradeHandler implements BRDataSourceInterface {
         return mInstance;
     }
 
+//    public static void initString() {
+//        Beta.strToastYourAreTheLatestVersion = "You're up to date";
+//        Beta.strToastCheckUpgradeError = "Failed to check for new version, please try again later";
+//        Beta.strToastCheckingUpgrade = "Checking, please wait...";
+//        Beta.strNotificationDownloading = "Downloading";
+//        Beta.strNotificationClickToView = "Click to view";
+//        Beta.strNotificationClickToInstall = "Click to install";
+//        Beta.strNotificationClickToRetry = "Click to retry";
+//        Beta.strNotificationClickToContinue = "Continue download";
+//        Beta.strNotificationDownloadSucc = "Download completed";
+//        Beta.strNotificationDownloadError = "Download failed";
+//        Beta.strNotificationHaveNewVersion = "New version available";
+//        Beta.strNetworkTipsMessage = "You have switched to the mobile network, whether to continue the current download?";
+//        Beta.strNetworkTipsTitle = "Network tips";
+//        Beta.strNetworkTipsConfirmBtn = "Continue download";
+//        Beta.strNetworkTipsCancelBtn = "Cancel";
+//        Beta.strUpgradeDialogVersionLabel = "Version";
+//        Beta.strUpgradeDialogFileSizeLabel = "Package size";
+//        Beta.strUpgradeDialogUpdateTimeLabel = "Update time";
+//        Beta.strUpgradeDialogFeatureLabel = "Release notes";
+//        Beta.strUpgradeDialogUpgradeBtn = "Update";
+//        Beta.strUpgradeDialogInstallBtn = "Install";
+//        Beta.strUpgradeDialogRetryBtn = "Retry";
+//        Beta.strUpgradeDialogContinueBtn = "Continue";
+//        Beta.strUpgradeDialogCancelBtn = "Next time";
+//    }
+
     public SQLiteDatabase getWritable() {
 //        if (mOpenCounter.incrementAndGet() == 1) {
         // Opening new database
@@ -54,10 +81,46 @@ public class UpgradeHandler implements BRDataSourceInterface {
         }
     }
 
+    public static final String ELA_TX_TABLE_NAME = "elaTransactionTable";
+    public static final String ELA_COLUMN_ID = "_id";
+    public static final String ELA_COLUMN_ISRECEIVED ="isReceived";//0 false,1 true
+    public static final String ELA_COLUMN_TIMESTAMP ="timeStamp";
+    public static final String ELA_COLUMN_BLOCKHEIGHT ="blockHeight";
+    public static final String ELA_COLUMN_HASH ="hash";
+    public static final String ELA_COLUMN_TXREVERSED ="txReversed";
+    public static final String ELA_COLUMN_FEE ="fee";
+    public static final String ELA_COLUMN_TO ="toAddress";
+    public static final String ELA_COLUMN_FROM ="fromAddress";
+    public static final String ELA_COLUMN_BALANCEAFTERTX ="balanceAfterTx";
+    public static final String ELA_COLUMN_TXSIZE ="txSize";
+    public static final String ELA_COLUMN_AMOUNT ="amount";
+    public static final String ELA_COLUMN_MENO ="meno";
+    public static final String ELA_COLUMN_ISVALID ="isValid";
+    public static final String ELA_COLUMN_ISVOTE ="isVote";
+
+    private static final String ELA_TX_DATABASE_CREATE = "create table if not exists " + ELA_TX_TABLE_NAME + " (" +
+            ELA_COLUMN_ID + " integer, " +
+            ELA_COLUMN_ISRECEIVED + " integer, " +
+            ELA_COLUMN_TIMESTAMP + " integer DEFAULT '0' , " +
+            ELA_COLUMN_BLOCKHEIGHT + " interger, " +
+            ELA_COLUMN_HASH + " blob, " +
+            ELA_COLUMN_TXREVERSED+ " text primary key , " +
+            ELA_COLUMN_FEE + " real, " +
+            ELA_COLUMN_TO + " text, " +
+            ELA_COLUMN_FROM + " text, " +
+            ELA_COLUMN_BALANCEAFTERTX + " integer, " +
+            ELA_COLUMN_TXSIZE + " integer, " +
+            ELA_COLUMN_AMOUNT + " real, " +
+            ELA_COLUMN_MENO + " text, " +
+            ELA_COLUMN_ISVALID + " interger, " +
+            ELA_COLUMN_ISVOTE +" integer);";
+
     public void deleteAllTransactions() {
         try {
             mDatabase = openDatabase();
-            mDatabase.delete(BRSQLiteHelper.ELA_TX_TABLE_NAME, null, null);
+//            mDatabase.delete(ELA_TX_TABLE_NAME, null, null);
+            mDatabase.execSQL("DROP TABLE IF EXISTS " + ELA_TX_TABLE_NAME);
+            mDatabase.execSQL(ELA_TX_DATABASE_CREATE);
         } finally {
             closeDatabase();
         }
@@ -73,6 +136,5 @@ public class UpgradeHandler implements BRDataSourceInterface {
 
     @Override
     public void closeDatabase() {
-
     }
 }

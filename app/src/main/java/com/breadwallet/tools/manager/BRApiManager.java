@@ -12,22 +12,19 @@ import com.breadwallet.presenter.entities.CurrencyEntity;
 import com.breadwallet.tools.animation.UiUtils;
 import com.breadwallet.tools.sqlite.RatesDataSource;
 import com.breadwallet.tools.threads.executor.BRExecutor;
-import com.breadwallet.tools.util.BRConstants;
 import com.breadwallet.tools.util.Utils;
 import com.breadwallet.wallet.WalletsMaster;
 import com.breadwallet.wallet.abstracts.BaseWalletManager;
 import com.breadwallet.wallet.wallets.bitcoin.WalletBitcoinManager;
-import com.breadwallet.wallet.wallets.ela.WalletElaManager;
-import com.google.gson.Gson;
+import com.breadwallet.wallet.wallets.ela.ElaDataSource;
+import com.breadwallet.wallet.wallets.side.ElaSideEthereumWalletManager;
+import com.elastos.jni.utils.HexUtils;
 import com.platform.APIClient;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.wallet.library.utils.HexUtils;
 
-import java.io.IOException;
-import java.math.BigDecimal;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
@@ -44,7 +41,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import okhttp3.Request;
-import okhttp3.Response;
 
 /**
  * BreadWallet
@@ -118,6 +114,15 @@ public class BRApiManager {
                         tmp.code = tmpObj.getString("code");
                         tmp.rate = Float.valueOf(tmpObj.getString("rate"));
                         tmp.iso = walletManager.getIso();
+
+//                        if(tmp.code.equalsIgnoreCase("ETH")) {
+//                            CurrencyEntity elaEthEntity = new CurrencyEntity();
+//                            elaEthEntity.name = ElaSideEthereumWalletManager.ETH_SCHEME;
+//                            elaEthEntity.code = ElaSideEthereumWalletManager.getInstance(context).getIso();
+//                            elaEthEntity.rate = Float.valueOf(tmpObj.getString("rate"));
+//                            elaEthEntity.iso = ElaSideEthereumWalletManager.getInstance(context).getIso();
+//                            set.add(elaEthEntity);
+//                        }
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -189,6 +194,14 @@ public class BRApiManager {
                     }
                 });
             }
+//            if(w.getIso().equalsIgnoreCase("IOEX")){
+//                BRExecutor.getInstance().forLightWeightBackgroundTasks().execute(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        WalletIoexManager.getInstance(context).updateTxHistory();
+//                    }
+//                });
+//            }
             if(w.getIso().equalsIgnoreCase("ELA")){
                 BRExecutor.getInstance().forLightWeightBackgroundTasks().execute(new Runnable() {
                     @Override
@@ -196,10 +209,16 @@ public class BRApiManager {
                         w.refreshCachedBalance(context);
                     }
                 });
+//                BRExecutor.getInstance().forLightWeightBackgroundTasks().execute(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        WalletElaManager.getInstance(context).updateTxHistory();
+//                    }
+//                });
                 BRExecutor.getInstance().forLightWeightBackgroundTasks().execute(new Runnable() {
                     @Override
                     public void run() {
-                        WalletElaManager.getInstance(context).updateTxHistory();
+                        ElaDataSource.getInstance(context).getAllDposProducers();
                     }
                 });
 
@@ -212,7 +231,8 @@ public class BRApiManager {
     private synchronized void updateErc20Rates(Context context) {
         //get all erc20 rates.
 //        String url = "https://api.coinmarketcap.com/v1/ticker/?limit=1000&convert=BTC";
-        String url = "https://api-wallet-ela.elastos.org/api/1/cmc?limit=1000";
+//        String url = "https://api-wallet-ela.elastos.org/api/1/cmc?limit=1000";
+        String url = "https://api-price.elaphant.app/api/1/cmc?limit=1000";
         String result = urlGET(context, url);
         Log.i(TAG, "updateErc20Rates result:"+result);
         try {
@@ -240,6 +260,14 @@ public class BRApiManager {
                 String rate = json.getString("price_btc");
                 String iso = json.getString("symbol");
 
+                if(iso.equalsIgnoreCase("ela")) {
+                    ElaSideEthereumWalletManager elaSideEthereumWalletManager = ElaSideEthereumWalletManager.getInstance(context);
+                    if(null != elaSideEthereumWalletManager) {
+                        CurrencyEntity elaEthEnt = new CurrencyEntity(code, elaSideEthereumWalletManager.getName(), Float.valueOf(rate), elaSideEthereumWalletManager.getIso());
+                        tmp.add(elaEthEnt);
+                    }
+                }
+
                 CurrencyEntity ent = new CurrencyEntity(code, name, Float.valueOf(rate), iso);
                 tmp.add(ent);
 
@@ -263,7 +291,7 @@ public class BRApiManager {
         //initialize the TimerTask's job
         initializeTimerTask(context);
 
-        timer.schedule(timerTask, 1000, 60000);
+        timer.schedule(timerTask, 1000, 1 * 60 * 1000);
     }
 
     public void stopTimerTask() {

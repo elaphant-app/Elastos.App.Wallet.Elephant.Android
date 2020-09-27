@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,7 +16,7 @@ import android.widget.Toast;
 
 import com.breadwallet.BuildConfig;
 import com.breadwallet.R;
-import com.breadwallet.presenter.activities.ProfileActivity;
+import com.breadwallet.presenter.activities.MyProfileActivity;
 import com.breadwallet.presenter.activities.did.DidQuestionActivity;
 import com.breadwallet.presenter.activities.settings.SettingsActivity;
 import com.breadwallet.presenter.customviews.BaseTextView;
@@ -27,6 +28,7 @@ import com.breadwallet.tools.manager.BRSharedPrefs;
 import com.breadwallet.tools.security.BRKeyStore;
 import com.breadwallet.tools.util.BRConstants;
 import com.breadwallet.tools.util.SettingsUtil;
+import com.breadwallet.tools.util.StringUtil;
 import com.breadwallet.tools.util.Utils;
 import com.breadwallet.wallet.WalletsMaster;
 import com.breadwallet.wallet.abstracts.BaseWalletManager;
@@ -63,17 +65,19 @@ public class FragmentSetting extends Fragment {
     private TextView mNickname;
     private void setTitleAndList(View rootView) {
         mDidContent = rootView.findViewById(R.id.did_content);
-        String did = "";
-        try {
-            byte[] phrase = BRKeyStore.getPhrase(getContext(), 0);
-            String publickey = Utility.getInstance(getContext()).getSinglePublicKey(new String(phrase));
-            if(publickey != null) {
-                did = Utility.getInstance(getContext()).getDid(publickey);
+        String did = BRSharedPrefs.getMyDid(getContext());
+        if(StringUtil.isNullOrEmpty(did)) {
+            try {
+                byte[] phrase = BRKeyStore.getPhrase(getContext(), 0);
+                String publickey = Utility.getInstance(getContext()).getSinglePublicKey(new String(phrase));
+                if(publickey != null) {
+                    did = Utility.getInstance(getContext()).getDid(publickey);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
-        mDidContent.setText(did);
+        mDidContent.setText("did:ela:"+did);
 
         mNickname = rootView.findViewById(R.id.did_alias);
         String nickname = BRSharedPrefs.getNickname(getContext());
@@ -123,7 +127,7 @@ public class FragmentSetting extends Fragment {
         rootView.findViewById(R.id.enter_nick_view).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(getActivity(), ProfileActivity.class);
+                Intent intent = new Intent(getActivity(), MyProfileActivity.class);
                 getActivity().startActivity(intent);
                 getActivity().overridePendingTransition(R.anim.enter_from_right, R.anim.exit_to_left);
             }
@@ -131,7 +135,7 @@ public class FragmentSetting extends Fragment {
         rootView.findViewById(R.id.back_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                UiUtils.openScanner(getActivity(), BRConstants.SCANNER_DID_REQUEST);
+                UiUtils.openScanner(getActivity(), BRConstants.SCANNER_DID_OR_ADD_REQUEST);
             }
         });
         rootView.findViewById(R.id.did_copy).setOnClickListener(new View.OnClickListener() {

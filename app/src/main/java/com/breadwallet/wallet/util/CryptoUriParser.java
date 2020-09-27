@@ -8,14 +8,11 @@ import android.util.Log;
 
 import com.breadwallet.R;
 import com.breadwallet.core.BRCoreKey;
-import com.breadwallet.presenter.customviews.BRDialogView;
 import com.breadwallet.presenter.entities.CryptoRequest;
-import com.breadwallet.tools.animation.UiUtils;
 import com.breadwallet.tools.animation.BRDialog;
+import com.breadwallet.tools.animation.UiUtils;
 import com.breadwallet.tools.manager.BRClipboardManager;
 import com.breadwallet.tools.manager.BREventManager;
-import com.breadwallet.tools.manager.BRSharedPrefs;
-import com.breadwallet.tools.manager.SendManager;
 import com.breadwallet.tools.threads.ImportPrivKeyTask;
 import com.breadwallet.tools.threads.PaymentProtocolTask;
 import com.breadwallet.tools.threads.executor.BRExecutor;
@@ -25,15 +22,13 @@ import com.breadwallet.tools.util.Utils;
 import com.breadwallet.wallet.WalletsMaster;
 import com.breadwallet.wallet.abstracts.BaseWalletManager;
 import com.breadwallet.wallet.wallets.bitcoin.BaseBitcoinWalletManager;
-import com.breadwallet.wallet.wallets.ela.WalletElaManager;
 import com.breadwallet.wallet.wallets.ethereum.WalletEthManager;
+import com.breadwallet.wallet.wallets.side.ElaSideEthereumWalletManager;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.net.URLDecoder;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -129,11 +124,13 @@ public class CryptoUriParser {
 
         BaseWalletManager wm = WalletsMaster.getInstance(app).getCurrentWallet(app);
 
+        if(wm == null) return null;
+
         if (scheme == null) {
             scheme = wm.getScheme();
-            obj.iso = wm.getIso();
+//            obj.iso = wm.getIso();
 
-        } else {
+        } /*else {
             List<BaseWalletManager> list = new ArrayList<>(WalletsMaster.getInstance(app).getAllWallets(app));
             for (BaseWalletManager walletManager : list) {
                 if (scheme.equalsIgnoreCase(walletManager.getScheme())) {
@@ -141,9 +138,10 @@ public class CryptoUriParser {
                     break;
                 }
             }
-        }
+        }*/
 
         obj.scheme = scheme;
+        obj.iso = wm.getIso();
 
         String schemeSpecific = u.getSchemeSpecificPart();
         if (schemeSpecific.startsWith("//")) {
@@ -176,12 +174,14 @@ public class CryptoUriParser {
             }
             if (keyValue[0].trim().equals("amount")) {
                 try {
-                    BigDecimal bigDecimal = new BigDecimal(keyValue[1].trim());
-                    if(scheme.equalsIgnoreCase("elastos")) {
-                        obj.amount = bigDecimal;
-                    } else {
-                        obj.amount = bigDecimal.multiply(new BigDecimal("100000000"));
-                    }
+                    obj.amount = new BigDecimal(keyValue[1].trim());
+//                    BigDecimal bigDecimal = new BigDecimal(keyValue[1].trim());
+//                    obj.amount = bigDecimal;
+//                    if(scheme.equalsIgnoreCase("elastos")) {
+//                        obj.amount = bigDecimal;
+//                    } else {
+//                        obj.amount = bigDecimal.multiply(new BigDecimal("100000000"));
+//                    }
 
                 } catch (NumberFormatException e) {
                     e.printStackTrace();
@@ -263,18 +263,18 @@ public class CryptoUriParser {
         if (requestObject == null || requestObject.address == null || requestObject.address.isEmpty())
             return false;
         final BaseWalletManager wallet = WalletsMaster.getInstance(app).getCurrentWallet(app);
-        if (requestObject.iso != null && !requestObject.iso.equalsIgnoreCase(wallet.getIso())) {
-            if (!(WalletsMaster.getInstance(app).isIsoErc20(app, wallet.getIso()) && requestObject.iso.equalsIgnoreCase("ETH"))) {
-                BRDialog.showCustomDialog(app, app.getString(R.string.Alert_error),
-                        String.format(app.getString(R.string.Send_invalidAddressMessage), wallet.getName()), app.getString(R.string.AccessibilityLabels_close), null, new BRDialogView.BROnClickListener() {
-                            @Override
-                            public void onClick(BRDialogView brDialogView) {
-                                brDialogView.dismiss();
-                            }
-                        }, null, null, 0);
-                return true; //true since it's a crypto url but different iso than the currently chosen one
-            } //  else ->   //allow tokens to scan ETH so continue ..
-        }
+//        if (requestObject.iso != null && !requestObject.iso.equalsIgnoreCase(wallet.getIso())) {
+//            if (!(WalletsMaster.getInstance(app).isIsoErc20(app, wallet.getIso()) && requestObject.iso.equalsIgnoreCase("ETH"))) {
+//                BRDialog.showCustomDialog(app, app.getString(R.string.Alert_error),
+//                        String.format(app.getString(R.string.Send_invalidAddressMessage), wallet.getName()), app.getString(R.string.AccessibilityLabels_close), null, new BRDialogView.BROnClickListener() {
+//                            @Override
+//                            public void onClick(BRDialogView brDialogView) {
+//                                brDialogView.dismiss();
+//                            }
+//                        }, null, null, 0);
+//                return true; //true since it's a crypto url but different iso than the currently chosen one
+//            } //  else ->   //allow tokens to scan ETH so continue ..
+//        }
 
         if (requestObject.amount == null || requestObject.amount.compareTo(BigDecimal.ZERO) == 0) {
             BRExecutor.getInstance().forMainThreadTasks().execute(new Runnable() {
@@ -344,6 +344,9 @@ public class CryptoUriParser {
                 builder = builder.appendQueryParameter("amount", amount.toPlainString());
             } else if(iso.equalsIgnoreCase("ELA")) {
                 builder = builder.appendQueryParameter("amount", cryptoAmount.toPlainString());
+            } else if(iso.equalsIgnoreCase("ELAETHSC")){
+                BigDecimal ethAmount = cryptoAmount.divide(new BigDecimal(ElaSideEthereumWalletManager.ETHER_WEI), 8, BRConstants.ROUNDING_MODE);
+                builder = builder.appendQueryParameter("amount", ethAmount.toPlainString());
             } else {
                 builder = builder.appendQueryParameter("amount", cryptoAmount.toPlainString());
 //                throw new RuntimeException("URI not supported for: " + iso);

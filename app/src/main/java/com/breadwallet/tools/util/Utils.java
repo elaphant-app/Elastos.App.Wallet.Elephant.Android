@@ -9,12 +9,17 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.graphics.Typeface;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.hardware.fingerprint.FingerprintManager;
-import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.ImageSpan;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
@@ -23,16 +28,27 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.breadwallet.BreadApp;
 import com.breadwallet.presenter.activities.intro.IntroActivity;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
-import java.math.BigDecimal;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static android.content.Context.FINGERPRINT_SERVICE;
 
@@ -150,6 +166,7 @@ public class Utils {
         return (int) (dps * scale + 0.5f);
     }
 
+
     public static String bytesToHex(byte[] in) {
         final StringBuilder builder = new StringBuilder();
         for (byte b : in) {
@@ -206,7 +223,7 @@ public class Utils {
                 pInfo = app.getPackageManager().getPackageInfo(app.getPackageName(), 0);
                 versionNumber = pInfo.versionCode;
 
-            } catch (PackageManager.NameNotFoundException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
@@ -282,6 +299,21 @@ public class Utils {
         return false;
     }
 
+    public static List<String> spliteByComma(String value){
+        try {
+            if(StringUtil.isNullOrEmpty(value)) return null;
+            if(value.startsWith("[") && value.endsWith("]")) {
+                return new Gson().fromJson(value, new TypeToken<List<String>>(){}.getType());
+            }
+            String[] trimArray = value.trim().split(",");
+            return Arrays.asList(trimArray);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
     public static void correctTextSizeIfNeeded(TextView v) {
         int limit = 100;
         int lines = v.getLineCount();
@@ -298,4 +330,46 @@ public class Utils {
         }
     }
 
+    public static Bitmap getIconFromPath(File filePath) {
+        if(null == filePath) return null;
+        Bitmap bitmap = null;
+        try {
+            bitmap = BitmapFactory.decodeFile(filePath.getAbsolutePath());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return bitmap;
+    }
+
+    public static void copyFile(File src, File des, String name) {
+        if (null == src
+                || null == des
+                || StringUtil.isNullOrEmpty(name)) return;
+        if (!des.exists()) des.mkdirs();
+        File backupFile = new File(des, name);
+        if (backupFile.exists()) backupFile.delete();
+
+        InputStream inputStream = null;
+        OutputStream outputStream = null;
+        try {
+            inputStream = new FileInputStream(src);
+            outputStream = new FileOutputStream(backupFile);
+            byte[] buffer = new byte[1024];
+            int length = inputStream.read(buffer);
+            while (length > 0) {
+                outputStream.write(buffer, 0, length);
+                length = inputStream.read(buffer);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                outputStream.flush();
+                inputStream.close();
+                outputStream.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
 }

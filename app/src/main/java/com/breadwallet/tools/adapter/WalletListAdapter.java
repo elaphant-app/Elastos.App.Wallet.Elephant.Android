@@ -87,15 +87,19 @@ public class WalletListAdapter extends RecyclerView.Adapter<WalletListAdapter.Wa
         String cryptoBalance = CurrencyUtils.getFormattedAmount(mContext, wallet.getIso(), wallet.getCachedBalance(mContext));
 
         // Set wallet fields
-        holder.mWalletName.setText(currencyCode);
+        if(currencyCode.equalsIgnoreCase("ELAETHSC")) {
+            holder.mWalletName.setText("ELA/ETHSC");
+        } else {
+            holder.mWalletName.setText(currencyCode);
+        }
         holder.mIso.setText(name);
-        holder.mWalletBalanceFiat.setText(cryptoBalance.replace(wallet.getIso(), ""));
+        holder.mWalletBalanceFiat.setText(cryptoBalance.replace(wallet.getIso().equalsIgnoreCase("ELAETHSC")?"ELA":wallet.getIso(), ""));
         holder.mWalletBalanceCurrency.setText(fiatBalance);
         holder.mWalletBalanceCurrency.setVisibility(!item.mShowSyncProgress ? View.VISIBLE : View.INVISIBLE);
         holder.mSyncingProgressBar.setVisibility(item.mShowSyncProgress ? View.VISIBLE : View.INVISIBLE);
         holder.mSyncingLabel.setVisibility(item.mShowSyncProgress ? View.VISIBLE : View.INVISIBLE);
         holder.mSyncingLabel.setText(item.mLabelText);
-        if((wallet instanceof WalletTokenManager) && !wallet.getIso().equalsIgnoreCase("ioex"))
+        if((wallet instanceof WalletTokenManager))
             holder.mErc20Icon.setVisibility(View.VISIBLE);
         else
             holder.mErc20Icon.setVisibility(View.GONE);
