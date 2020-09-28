@@ -731,6 +731,7 @@ public class FragmentExplore extends Fragment implements OnStartDragListener, Mi
                             if (dappUrl.contains(favorite.split("<\\|>")[1])) {
                                 favorites.remove(favorite);
                                 mItems.remove(mAboutAppItem);
+                                mAdapter.notifyDataSetChanged();
                                 break;
                             }
                         }
