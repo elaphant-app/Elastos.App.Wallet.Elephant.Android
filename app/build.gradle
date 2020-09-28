@@ -7,11 +7,11 @@ android {
 
     defaultConfig {
         testInstrumentationRunner = 'android.support.test.runner.AndroidJUnitRunner'
-        applicationId = 'com.elastos.wallet'
+        applicationId = 'app.elaphant.wallets'
         minSdkVersion 23
         targetSdkVersion 28
-        versionCode 91
-        versionName "1.99.1"
+        versionCode 92
+        versionName "1.99.2"
         multiDexEnabled true
 
         // Similar to other properties in the defaultConfig block,
