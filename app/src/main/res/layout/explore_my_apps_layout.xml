@@ -24,14 +24,16 @@
 
     <com.breadwallet.presenter.customviews.BaseTextView
         android:id="@+id/explore_item_title_tv"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_toRightOf="@+id/explore_item_logo_tv"
+        android:layout_centerVertical="true"
         android:layout_marginLeft="16dp"
         android:layout_marginTop="12dp"
-        android:textSize="15sp"
-        android:layout_centerVertical="true"
-        android:textColor="@color/black"/>
+        android:layout_marginRight="55dp"
+        android:layout_toRightOf="@+id/explore_item_logo_tv"
+        android:ellipsize="end"
+        android:textColor="@color/black"
+        android:textSize="15sp" />
 
     <com.breadwallet.presenter.customviews.BaseTextView
         android:id="@+id/explore_item_developer_tv"

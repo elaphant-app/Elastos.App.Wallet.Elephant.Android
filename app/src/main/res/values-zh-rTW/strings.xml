@@ -1177,6 +1177,13 @@
     <string name="clear_cache_positive_btn">确定</string>
     <string name="clear_cache_negative_btn">取消</string>
     <string name="elapay_request_params_error">請求參數錯誤</string>
+    <string name="My.favorites.title">收藏</string>
+    <string name="enter_website_url">請輸入網址</string>
+    <string name="favoriteIt">網站已收藏</string>
+    <string name="removeFromFavorites">已取消收藏</string>
+    <string name="reload">重新載入</string>
+    <string name="bookmarkIt">收藏網站</string>
+    <string name="disFavoriteIt">取消收藏</string>
 
 
 </resources>

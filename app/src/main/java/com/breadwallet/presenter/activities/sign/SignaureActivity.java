@@ -198,7 +198,7 @@ public class SignaureActivity extends BRActivity {
             public void run() {
                 try {
                     UiUtils.callbackDataNeedSign(SignaureActivity.this, backurl, entity);
-                    UiUtils.returnDataNeedSign(SignaureActivity.this, returnUrl, Data, Sign, appId, target);
+                    UiUtils.returnDataNeedSign(SignaureActivity.this, returnUrl, Data, Sign, appId, target, false);
                 } catch (Exception e) {
                     runOnUiThread(new Runnable() {
                         @Override

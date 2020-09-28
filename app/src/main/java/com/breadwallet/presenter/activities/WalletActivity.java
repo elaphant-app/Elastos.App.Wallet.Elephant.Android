@@ -129,6 +129,7 @@ public class WalletActivity extends BRActivity implements InternetManager.Connec
         Intent intent = getIntent();
         if (intent != null) {
             String action = intent.getAction();
+
             if(!StringUtil.isNullOrEmpty(action) && action.equals(Intent.ACTION_VIEW)) {
                 Uri uri = intent.getData();
                 mUri = uri.toString();
@@ -152,6 +153,7 @@ public class WalletActivity extends BRActivity implements InternetManager.Connec
                 if(coinName.equalsIgnoreCase("USDT-ERC20")) {
                     coinName = "USDT";
                 }
+
                 BaseWalletManager wm = WalletsMaster.getInstance(this).getWalletByIso(this, coinName);
                 if(null == wm) {
                     Toast.makeText(this, getString(R.string.elapay_request_params_error), Toast.LENGTH_SHORT).show();
@@ -466,7 +468,14 @@ public class WalletActivity extends BRActivity implements InternetManager.Connec
                         String appName = factory.getAppName();
                         String appId = factory.getAppID();
                         String PK = factory.getPublicKey();
-                        String des = StringUtil.isNullOrEmpty(factory.getOrderID())?  "" : "OrderID="+factory.getOrderID();
+
+                        String des;
+                        if(factory.getHost().equals("calleth")){
+                            des = factory.getHexData();
+                        }else{
+                            des = StringUtil.isNullOrEmpty(factory.getOrderID())?  "" : "OrderID="+factory.getOrderID();
+                        }
+
                         mCallbackUrl = factory.getCallbackUrl();
                         mReturnUrl = factory.getReturnUrl();
                         mAppId = factory.getAppID();

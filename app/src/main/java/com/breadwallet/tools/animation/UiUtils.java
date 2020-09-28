@@ -44,6 +44,7 @@ import com.breadwallet.presenter.activities.MultiSignTxActivity;
 import com.breadwallet.presenter.activities.VoteActivity;
 import com.breadwallet.presenter.activities.WalletActivity;
 import com.breadwallet.presenter.activities.WalletNameActivity;
+import com.breadwallet.presenter.activities.WebviewScriptConfig;
 import com.breadwallet.presenter.activities.camera.ScanQRActivity;
 import com.breadwallet.presenter.activities.crc.CrcMembersActivity;
 import com.breadwallet.presenter.activities.crc.CrcVoteActivity;
@@ -61,6 +62,7 @@ import com.breadwallet.presenter.entities.TxUiHolder;
 import com.breadwallet.presenter.fragments.FragmentReceive;
 import com.breadwallet.presenter.fragments.FragmentRequestAmount;
 import com.breadwallet.presenter.fragments.FragmentSend;
+import com.breadwallet.presenter.fragments.FragmentSendCallback;
 import com.breadwallet.presenter.fragments.FragmentSignal;
 import com.breadwallet.presenter.fragments.FragmentSupport;
 import com.breadwallet.presenter.fragments.FragmentTxDetails;
@@ -163,6 +165,30 @@ public class UiUtils {
             fragmentSend = new FragmentSend();
         }
         fragmentSend.saveViewModelData(request);
+
+        if (!fragmentSend.isAdded()) {
+            app.getSupportFragmentManager().beginTransaction()
+                    .setCustomAnimations(0, 0, 0, R.animator.plain_300)
+                    .add(android.R.id.content, fragmentSend, FragmentSend.class.getName())
+                    .addToBackStack(FragmentSend.class.getName()).commitAllowingStateLoss();
+        }
+
+    }
+
+    public static void showSendFragmentWithCallback(FragmentActivity app, final CryptoRequest request, FragmentSendCallback callbacks) {
+        if (app == null) {
+            Log.e(TAG, "showSendFragment: app is null");
+            return;
+        }
+
+        FragmentSend fragmentSend = (FragmentSend) app.getSupportFragmentManager().findFragmentByTag(FragmentSend.class.getName());
+        if (fragmentSend == null) {
+            fragmentSend = new FragmentSend();
+        }
+        fragmentSend.theCallbacks = callbacks;
+        fragmentSend.specifiedNetwork = WebviewScriptConfig.getInstance(app).network;
+        fragmentSend.theRequest = request;
+
         if (!fragmentSend.isAdded()) {
             app.getSupportFragmentManager().beginTransaction()
                     .setCustomAnimations(0, 0, 0, R.animator.plain_300)
@@ -597,7 +623,7 @@ public class UiUtils {
         context.startActivity(intent);
     }
 
-    public static void returnDataNeedSign(Activity activity, String returnUrl, String Data, String Sign, String appId, String targe) {
+    public static void returnDataNeedSign(Activity activity, String returnUrl, String Data, String Sign, String appId, String targe, boolean isInternal) {
         if (!StringUtil.isNullOrEmpty(returnUrl)) {
             String url;
             if (returnUrl.contains("?")) {
@@ -606,11 +632,16 @@ public class UiUtils {
                 url = returnUrl + "?Data=" + Uri.encode(Data) + "&Sign=" + Uri.encode(Sign) /*+ "&browser=elaphant"*/;
             }
 
-            String addAppIds = BRSharedPrefs.getAddedAppId(activity);
-            if (!StringUtil.isNullOrEmpty(addAppIds) && addAppIds.contains(appId)
-                /*|| (!StringUtil.isNullOrEmpty(targe) && targe.equals("internal"))*/) {
-                UiUtils.startWebviewActivity(activity, url, appId);
-            } else {
+//            String addAppIds = BRSharedPrefs.getAddedAppId(activity);
+//            if (!StringUtil.isNullOrEmpty(addAppIds) && addAppIds.contains(appId)
+//                /*|| (!StringUtil.isNullOrEmpty(targe) && targe.equals("internal"))*/) {
+//                 UiUtils.startWebviewActivity(activity, url, appId);
+//            } else {
+//                UiUtils.openUrlByBrowser(activity, url);
+//            }
+            if(isInternal){
+                UiUtils.startWebviewActivity(activity, url);
+            }else{
                 UiUtils.openUrlByBrowser(activity, url);
             }
         }

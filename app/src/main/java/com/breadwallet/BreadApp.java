@@ -29,7 +29,7 @@ import com.breadwallet.tools.util.Utils;
 import com.platform.APIClient;
 import com.tencent.bugly.crashreport.CrashReport;
 
-import org.common.lib.BaseApplication;
+import org.common.lib./**/BaseApplication;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -80,6 +80,7 @@ public class BreadApp extends BaseApplication {
     public static AtomicInteger activityCounter = new AtomicInteger();
     public static long backgroundedTime;
     public static Context mContext;
+    public boolean isBookmarkChanged = false;
     private ApplicationLifecycleObserver mObserver;
 
     private static final String PACKAGE_NAME = BreadApp.getBreadContext() == null ? null : BreadApp.getBreadContext().getApplicationContext().getPackageName();

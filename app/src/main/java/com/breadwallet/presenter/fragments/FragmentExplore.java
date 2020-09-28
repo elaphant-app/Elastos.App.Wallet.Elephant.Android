@@ -2,6 +2,9 @@ package com.breadwallet.presenter.fragments;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -13,16 +16,25 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
+import android.text.Editable;
 import android.text.Html;
+import android.text.TextWatcher;
 import android.util.Log;
+import android.util.Patterns;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.breadwallet.BreadApp;
 import com.breadwallet.R;
+import com.breadwallet.presenter.activities.ExploreWebActivity;
 import com.breadwallet.presenter.customviews.BaseTextView;
 import com.breadwallet.presenter.customviews.LoadingDialog;
 import com.breadwallet.presenter.entities.MyAppItem;
@@ -58,8 +70,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -87,13 +101,14 @@ public class FragmentExplore extends Fragment implements OnStartDragListener, Mi
 
     private RecyclerView mMyAppsRv;
     private MiniAppsAdapter mAdapter;
-    private View mDisclaimLayout;
+//    private View mDisclaimLayout;
     private View mMenuPopLayout;
     private ItemTouchHelper mItemTouchHelper;
     private View mDoneBtn;
     private View mCancelBtn;
-    private View mAddBtn;
-    private View mEditBtn;
+    //    private View mAddBtn;
+//    private View mEditBtn;
+    private EditText mURLInput;
     private View mOkBtn;
     private View mEditPopView;
     private View mAddPopView;
@@ -175,6 +190,17 @@ public class FragmentExplore extends Fragment implements OnStartDragListener, Mi
         this.mActivity = activity;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        BreadApp app = (BreadApp)this.mActivity.getApplication();
+        if(app.isBookmarkChanged){
+            initApps();
+            app.isBookmarkChanged = false;
+        }
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -191,7 +217,7 @@ public class FragmentExplore extends Fragment implements OnStartDragListener, Mi
     private List<String> mAppIds = new ArrayList<>();
 
     private void initView(View rootView) {
-        mDisclaimLayout = rootView.findViewById(R.id.disclaim_layout);
+//        mDisclaimLayout = rootView.findViewById(R.id.disclaim_layout);
         mRemoveAppLayout = rootView.findViewById(R.id.explore_remove_app_layout);
         mMenuPopLayout = rootView.findViewById(R.id.explore_menu_pop_layout);
         mAboutPopLayout = rootView.findViewById(R.id.explore_about_layout);
@@ -200,8 +226,9 @@ public class FragmentExplore extends Fragment implements OnStartDragListener, Mi
         mOkBtn = rootView.findViewById(R.id.disclaim_ok_btn);
         mDoneBtn = rootView.findViewById(R.id.explore_done_tv);
         mCancelBtn = rootView.findViewById(R.id.explore_cancel_tv);
-        mAddBtn = rootView.findViewById(R.id.explore_add_tv);
-        mEditBtn = rootView.findViewById(R.id.explore_edit_tv);
+//        mAddBtn = rootView.findViewById(R.id.explore_add_tv);
+//        mEditBtn = rootView.findViewById(R.id.explore_edit_tv);
+        mURLInput = rootView.findViewById(R.id.urlInput);
         mMyAppsRv = rootView.findViewById(R.id.app_list_rv);
         mEditPopView = rootView.findViewById(R.id.explore_edit_pop);
         mAddPopView = rootView.findViewById(R.id.explore_add_pop);
@@ -212,8 +239,8 @@ public class FragmentExplore extends Fragment implements OnStartDragListener, Mi
         mAboutCancelView = rootView.findViewById(R.id.cancel_tv);
         mCancelView = rootView.findViewById(R.id.remove_mini_cancel);
         mRemoveView = rootView.findViewById(R.id.remove_mini_confirm);
-        if (BRSharedPrefs.getDisclaimShow(getContext()))
-            mDisclaimLayout.setVisibility(View.VISIBLE);
+//        if (BRSharedPrefs.getDisclaimShow(getContext()))
+//            mDisclaimLayout.setVisibility(View.VISIBLE);
         mLoadingDialog = new LoadingDialog(getContext(), R.style.progressDialog);
         mLoadingDialog.setCanceledOnTouchOutside(false);
     }
@@ -224,42 +251,59 @@ public class FragmentExplore extends Fragment implements OnStartDragListener, Mi
             mItems.clear();
             mRemoveApp.clear();
 
-//            AssetManager assetManager = getContext().getApplicationContext().getAssets();
-//            String[] apps = assetManager.list("apps");
-            BRSharedPrefs.putAddedAppId(getContext(), new Gson().toJson(mAppIds));
-            final List<MyAppItem> tmp = ProfileDataSource.getInstance(getContext()).getMyAppItems();
-            if (tmp != null && tmp.size()>0) {
-                mItems.addAll(tmp);
-                for (MyAppItem item : tmp) {
-                    mAppIds.add(item.appId);
-                    BRSharedPrefs.putAddedAppId(getContext(), new Gson().toJson(mAppIds));
-                }
-                mAdapter.notifyDataSetChanged();
+////            AssetManager assetManager = getContext().getApplicationContext().getAssets();
+////            String[] apps = assetManager.list("apps");
+//            BRSharedPrefs.putAddedAppId(getContext(), new Gson().toJson(mAppIds));
+//            final List<MyAppItem> tmp = ProfileDataSource.getInstance(getContext()).getMyAppItems();
+//            if (tmp != null && tmp.size()>0) {
+//                mItems.addAll(tmp);
+//                for (MyAppItem item : tmp) {
+//                    mAppIds.add(item.appId);
+//                    BRSharedPrefs.putAddedAppId(getContext(), new Gson().toJson(mAppIds));
+//                }
+//                mAdapter.notifyDataSetChanged();
+//
+//                boolean need = BRSharedPrefs.needAddApps(getContext());
+//                if(need) {
+//                    BRExecutor.getInstance().forLightWeightBackgroundTasks().execute(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            try {
+//                                addVotemeApp();
+//                                addMiniAppsApp();
+//                                BRSharedPrefs.putNeedAddApps(getContext(), false);
+//                            } catch (Exception e) {
+//                                e.printStackTrace();
+//                            } finally {
+//                                dialogDismiss();
+//                            }
+//                        }
+//                    });
+//                }
+//            } else {
+//                BRExecutor.getInstance().forLightWeightBackgroundTasks().execute(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        getInterApps(tmp);
+//                    }
+//                });
+//            }
+            SharedPreferences sp = getContext().getSharedPreferences("BrowserPrefs", Context.MODE_PRIVATE);
+            Set<String> favorites = sp.getStringSet("favorites", null);
 
-                boolean need = BRSharedPrefs.needAddApps(getContext());
-                if(need) {
-                    BRExecutor.getInstance().forLightWeightBackgroundTasks().execute(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                addVotemeApp();
-                                addMiniAppsApp();
-                                BRSharedPrefs.putNeedAddApps(getContext(), false);
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            } finally {
-                                dialogDismiss();
-                            }
-                        }
-                    });
+            if(favorites != null){
+                String[] favoriteData;
+                MyAppItem item;
+                for (String favorite : favorites) {
+                    favoriteData = favorite.split("<\\|>");
+                    item = new MyAppItem();
+                    item.name = favoriteData[0];
+                    item.url = favoriteData[1];
+                    item.icon = favoriteData[2];
+                    mItems.add(item);
                 }
-            } else {
-                BRExecutor.getInstance().forLightWeightBackgroundTasks().execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        getInterApps(tmp);
-                    }
-                });
+
+                mAdapter.notifyDataSetChanged();
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -425,26 +469,27 @@ public class FragmentExplore extends Fragment implements OnStartDragListener, Mi
         if (null != mAboutShowListener) mAboutShowListener.hide();
         mAboutAppItem = item;
 
-        String languageCode = Locale.getDefault().getLanguage();
-        if(!StringUtil.isNullOrEmpty(languageCode) && languageCode.contains("zh")){
-            mAboutAboutView.setText(String.format(getString(R.string.explore_pop_about), mAboutAppItem.name_zh_CN));
-        } else {
-            mAboutAboutView.setText(String.format(getString(R.string.explore_pop_about), mAboutAppItem.name_en));
-        }
-        if(StringUtil.isNullOrEmpty(mAboutAppItem.name_zh_CN) && StringUtil.isNullOrEmpty(mAboutAppItem.name_en))
-            mAboutAboutView.setText(mAboutAppItem.name);
+//        String languageCode = Locale.getDefault().getLanguage();
+//        if(!StringUtil.isNullOrEmpty(languageCode) && languageCode.contains("zh")){
+//            mAboutAboutView.setText(String.format(getString(R.string.explore_pop_about), mAboutAppItem.name_zh_CN));
+//        } else {
+//            mAboutAboutView.setText(String.format(getString(R.string.explore_pop_about), mAboutAppItem.name_en));
+//        }
+//        if(StringUtil.isNullOrEmpty(mAboutAppItem.name_zh_CN) && StringUtil.isNullOrEmpty(mAboutAppItem.name_en))
+//            mAboutAboutView.setText(mAboutAppItem.name);
     }
 
     @Override
     public void onItemClick(MyAppItem item, int position) {
         String url = item.url;
         if (!StringUtil.isNullOrEmpty(url)) {
-            if (url.contains("?")) {
-                url = url + "&browser=elaphant";
-            } else {
-                url = url + "?browser=elaphant";
-            }
-            UiUtils.startWebviewActivity(getActivity(), url, item.appId);
+//            if (url.contains("?")) {
+//                url = url + "&browser=elaphant";
+//            } else {
+//                url = url + "?browser=elaphant";
+//            }
+            //UiUtils.startWebviewActivity(getActivity(), url, item.appId);
+            UiUtils.startWebviewActivity(getActivity(), url);
 //
 //            String languageCode = Locale.getDefault().getLanguage();
 //            if (!StringUtil.isNullOrEmpty(languageCode) && languageCode.contains("zh")) {
@@ -467,22 +512,66 @@ public class FragmentExplore extends Fragment implements OnStartDragListener, Mi
         }
     }
 
-    private void initListener() {
-        mAddBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mMenuPopLayout.setVisibility(mAddPopView.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
-                mAddPopView.setVisibility(mAddPopView.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
-                mEditPopView.setVisibility(View.GONE);
-            }
-        });
+    private void go(){
+        String url = mURLInput.getText().toString();
+        if (!Patterns.WEB_URL.matcher(url).matches() || url.isEmpty()) {
+            Toast.makeText(getContext(), R.string.mini_app_invalid_url, Toast.LENGTH_SHORT).show();
+        }else if(url.indexOf("http") == 0){
+            UiUtils.startWebviewActivity(getActivity(), url);
+        }else{
+            UiUtils.startWebviewActivity(getActivity(), "https://"+url);
+        }
+    }
 
-        mEditBtn.setOnClickListener(new View.OnClickListener() {
+    private void initListener() {
+//        mAddBtn.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                mMenuPopLayout.setVisibility(mAddPopView.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
+//                mAddPopView.setVisibility(mAddPopView.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
+//                mEditPopView.setVisibility(View.GONE);
+//            }
+//        });
+
+//        mEditBtn.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                mMenuPopLayout.setVisibility(mEditPopView.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
+//                mEditPopView.setVisibility(mEditPopView.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
+//                mAddPopView.setVisibility(View.GONE);
+//            }
+//        });
+
+//        mURLInput.setOnKeyListener(new View.OnKeyListener() {
+//            @Override
+//            public boolean onKey(View view, int i, KeyEvent event) {
+//                if(i == KeyEvent.KEYCODE_ENTER){
+//                    go();
+//                }
+//                return false;
+//            }
+//        });
+
+        mURLInput.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            private boolean isActionUp = false;
+
             @Override
-            public void onClick(View v) {
-                mMenuPopLayout.setVisibility(mEditPopView.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
-                mEditPopView.setVisibility(mEditPopView.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
-                mAddPopView.setVisibility(View.GONE);
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if(event != null) {
+                    if (actionId == EditorInfo.IME_ACTION_GO && event.getAction() == KeyEvent.ACTION_UP) {
+                        go();
+                    }
+                }else{
+                    if(actionId == EditorInfo.IME_ACTION_GO){
+                        isActionUp = !isActionUp;
+                    }
+
+                    if(isActionUp){
+                        isActionUp = false;
+                        go();
+                    }
+                }
+                return false;
             }
         });
 
@@ -541,20 +630,20 @@ public class FragmentExplore extends Fragment implements OnStartDragListener, Mi
             }
         });
 
-        mOkBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                mDisclaimLayout.setVisibility(View.GONE);
-                BRSharedPrefs.setDisclaimshow(getContext(), false);
-            }
-        });
+//        mOkBtn.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                mDisclaimLayout.setVisibility(View.GONE);
+//                BRSharedPrefs.setDisclaimshow(getContext(), false);
+//            }
+//        });
 
-        mDisclaimLayout.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View view, MotionEvent motionEvent) {
-                return true;
-            }
-        });
+//        mDisclaimLayout.setOnTouchListener(new View.OnTouchListener() {
+//            @Override
+//            public boolean onTouch(View view, MotionEvent motionEvent) {
+//                return true;
+//            }
+//        });
         mRemoveAppLayout.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
@@ -582,40 +671,75 @@ public class FragmentExplore extends Fragment implements OnStartDragListener, Mi
             @Override
             public void onClick(View v) {
                 mAboutPopLayout.setVisibility(View.GONE);
-                if (null != mAboutShowListener) mAboutShowListener.show();
-                if (null != mAboutAppItem) {
-                    StringBuilder sb = new StringBuilder();
 
-                    String languageCode = Locale.getDefault().getLanguage();
-                    if(!StringUtil.isNullOrEmpty(languageCode) && languageCode.contains("zh")){
-                        sb.append(mAboutAppItem.name_zh_CN);
-                    } else {
-                        sb.append(mAboutAppItem.name_en);
-                    }
-                    sb.append(" ");
-                    sb.append("https://launch.elaphant.app/?");
-                    if(!StringUtil.isNullOrEmpty(languageCode) && languageCode.contains("zh")){
-                        sb.append("appName=").append(Uri.encode(mAboutAppItem.name_zh_CN)).append("&");
-                        sb.append("appTitle=").append(Uri.encode(mAboutAppItem.name_zh_CN)).append("&");
-                    } else {
-                        sb.append("appName=").append(Uri.encode(mAboutAppItem.name_en)).append("&");
-                        sb.append("appTitle=").append(Uri.encode(mAboutAppItem.name_en)).append("&");
-                    }
-                    sb.append("autoRedirect=").append("True").append("&");
-                    sb.append("redirectURL=").append(Uri.encode(mAboutAppItem.path.trim().
-                            replace("http:", "elaphant:")
-                            .replace("https:", "elaphant:")));
-                    UiUtils.shareCapsule(getContext(), sb.toString());
+                if (null != mAboutShowListener) mAboutShowListener.show();
+
+                if (null != mAboutAppItem) {
+                    Intent shareIntent = new Intent();
+                    shareIntent.setAction(Intent.ACTION_SEND);
+                    shareIntent.setType("text/plain");
+                    shareIntent.putExtra(Intent.EXTRA_TEXT, mAboutAppItem.url);
+                    shareIntent = Intent.createChooser(shareIntent, "");
+                    startActivity(shareIntent);
                 }
+
+                /////////////////////////////////////////////
+//                if (null != mAboutShowListener) mAboutShowListener.show();
+//                if (null != mAboutAppItem) {
+//                    StringBuilder sb = new StringBuilder();
+//
+//                    String languageCode = Locale.getDefault().getLanguage();
+//                    if(!StringUtil.isNullOrEmpty(languageCode) && languageCode.contains("zh")){
+//                        sb.append(mAboutAppItem.name_zh_CN);
+//                    } else {
+//                        sb.append(mAboutAppItem.name_en);
+//                    }
+//                    sb.append(" ");
+//                    sb.append("https://launch.elaphant.app/?");
+//                    if(!StringUtil.isNullOrEmpty(languageCode) && languageCode.contains("zh")){
+//                        sb.append("appName=").append(Uri.encode(mAboutAppItem.name_zh_CN)).append("&");
+//                        sb.append("appTitle=").append(Uri.encode(mAboutAppItem.name_zh_CN)).append("&");
+//                    } else {
+//                        sb.append("appName=").append(Uri.encode(mAboutAppItem.name_en)).append("&");
+//                        sb.append("appTitle=").append(Uri.encode(mAboutAppItem.name_en)).append("&");
+//                    }
+//                    sb.append("autoRedirect=").append("True").append("&");
+//                    sb.append("redirectURL=").append(Uri.encode(mAboutAppItem.path.trim().
+//                            replace("http:", "elaphant:")
+//                            .replace("https:", "elaphant:")));
+//                    UiUtils.shareCapsule(getContext(), sb.toString());
+//                }
             }
         });
 
         mAboutAboutView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                // About按钮改为了删除。
                 mAboutPopLayout.setVisibility(View.GONE);
+
                 if (null != mAboutShowListener) mAboutShowListener.show();
-                UiUtils.startMiniAppAboutActivity(getContext(), mAboutAppItem.appId);
+//                UiUtils.startMiniAppAboutActivity(getContext(), mAboutAppItem.appId);
+
+                if (null != mAboutAppItem) {
+                    String tempString;
+                    SharedPreferences sp = mActivity.getSharedPreferences("BrowserPrefs", Context.MODE_PRIVATE);
+                    Set<String> favorites = sp.getStringSet("favorites", new HashSet<String>());
+                    String dappUrl = mAboutAppItem.url;
+                    if(favorites != null && favorites.size() > 0){
+                        for (String favorite : favorites) {
+                            if (dappUrl.contains(favorite.split("<\\|>")[1])) {
+                                favorites.remove(favorite);
+                                mItems.remove(mAboutAppItem);
+                                mAdapter.notifyDataSetChanged();
+                                break;
+                            }
+                        }
+                    }
+
+                    SharedPreferences.Editor editor = sp.edit();
+                    editor.putStringSet("favorites",favorites).apply();
+                }
             }
         });
 
@@ -655,8 +779,8 @@ public class FragmentExplore extends Fragment implements OnStartDragListener, Mi
     }
 
     private void changeView(boolean isEdit) {
-        mAddBtn.setVisibility(isEdit ? View.GONE : View.VISIBLE);
-        mEditBtn.setVisibility(isEdit ? View.GONE : View.VISIBLE);
+//        mAddBtn.setVisibility(isEdit ? View.GONE : View.VISIBLE);
+//        mEditBtn.setVisibility(isEdit ? View.GONE : View.VISIBLE);
         mCancelBtn.setVisibility(isEdit ? View.VISIBLE : View.GONE);
         mDoneBtn.setVisibility(isEdit ? View.VISIBLE : View.GONE);
     }

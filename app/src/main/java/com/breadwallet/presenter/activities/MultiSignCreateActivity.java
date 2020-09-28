@@ -205,7 +205,7 @@ public class MultiSignCreateActivity extends BRActivity {
                     }
                 }
 
-                UiUtils.returnDataNeedSign(MultiSignCreateActivity.this, mReturnUrl, dataStr, sign, mAppID, "");
+                UiUtils.returnDataNeedSign(MultiSignCreateActivity.this, mReturnUrl, dataStr, sign, mAppID, "", false);
                 finish();
             }
         });

@@ -8,24 +8,30 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
+import android.webkit.ValueCallback;
 
 import com.breadwallet.BreadApp;
 import com.breadwallet.R;
 import com.breadwallet.presenter.activities.DisabledActivity;
+import com.breadwallet.presenter.activities.ExploreWebActivity;
 import com.breadwallet.presenter.activities.HomeActivity;
 import com.breadwallet.presenter.activities.InputPinActivity;
 import com.breadwallet.presenter.activities.InputWordsActivity;
 import com.breadwallet.presenter.activities.WalletActivity;
 import com.breadwallet.presenter.activities.WalletNameActivity;
+import com.breadwallet.presenter.activities.WebviewScriptConfig;
 import com.breadwallet.presenter.activities.intro.IntroActivity;
 import com.breadwallet.presenter.activities.intro.RecoverActivity;
 import com.breadwallet.presenter.activities.intro.WriteDownActivity;
+import com.breadwallet.presenter.entities.CryptoRequest;
+import com.breadwallet.presenter.fragments.FragmentSendCallback;
 import com.breadwallet.tools.animation.BRDialog;
 import com.breadwallet.tools.animation.UiUtils;
 import com.breadwallet.tools.manager.BRApiManager;
 import com.breadwallet.tools.manager.BRPublicSharedPrefs;
 import com.breadwallet.tools.manager.BRSharedPrefs;
 import com.breadwallet.tools.manager.InternetManager;
+import com.breadwallet.tools.manager.SendManager;
 import com.breadwallet.tools.security.AuthManager;
 import com.breadwallet.tools.security.BRKeyStore;
 import com.breadwallet.tools.security.PostAuth;
@@ -34,11 +40,17 @@ import com.breadwallet.tools.util.BRConstants;
 import com.breadwallet.tools.util.StringUtil;
 import com.breadwallet.tools.util.Utils;
 import com.breadwallet.wallet.WalletsMaster;
+import com.breadwallet.wallet.abstracts.BaseWalletManager;
 import com.breadwallet.wallet.util.CryptoUriParser;
+import com.breadwallet.wallet.wallets.ethereum.WalletEthManager;
+import com.breadwallet.wallet.wallets.side.ElaSideEthereumWalletManager;
 import com.elastos.jni.UriFactory;
 import com.elastos.jni.utils.SchemeStringUtils;
 import com.platform.HTTPServer;
 import com.platform.tools.BRBitId;
+
+import java.math.BigDecimal;
+import java.net.URL;
 
 /**
  * BreadWallet
@@ -287,7 +299,7 @@ public class BRActivity extends FragmentActivity implements BreadApp.OnAppBackgr
                     String url = data.getStringExtra("result");
                     if(StringUtil.isNullOrEmpty(url)) return;
 
-                    UriFactory uri = new UriFactory(url);
+                    final UriFactory uri = new UriFactory(url);
                     String scheme = uri.getScheme();
                     String host = uri.getHost();
                     if (!SchemeStringUtils.isNullOrEmpty(scheme) && !SchemeStringUtils.isNullOrEmpty(host)) {
@@ -299,12 +311,17 @@ public class BRActivity extends FragmentActivity implements BreadApp.OnAppBackgr
                                 case "multicreate":
                                     UiUtils.startMultiCreateActivity(this, Uri.parse(url));
                                     return;
+
                                 case "identity":
+                                case "ethsign":
                                     UiUtils.startAuthorActivity(this, url);
                                     return;
+
+                                case "calleth":
                                 case "elapay":
                                     UiUtils.startWalletActivity(this, url);
                                     return;
+
                                 case "sign":
                                     UiUtils.startSignActivity(this, url);
                                     return;
@@ -312,6 +329,7 @@ public class BRActivity extends FragmentActivity implements BreadApp.OnAppBackgr
                                 case "elacrcvote":
                                     UiUtils.startCrcActivity(this, url);
                                     return;
+
                                 default:
                                     if(mHomeActivity != null) {
                                         mHomeActivity.showAndDownloadCapsule(url);

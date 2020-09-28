@@ -36,8 +36,11 @@ import com.google.gson.reflect.TypeToken;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -339,6 +342,20 @@ public class Utils {
             e.printStackTrace();
         }
         return bitmap;
+    }
+
+    public static Bitmap getIconFromUrl(String urlString) {
+        if(null == urlString) return null;
+
+        try {
+            return BitmapFactory.decodeStream(new URL(urlString).openStream());
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+            return null;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     public static void copyFile(File src, File des, String name) {

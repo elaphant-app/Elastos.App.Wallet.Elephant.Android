@@ -33,7 +33,7 @@
             android:layout_height="65dp"
             android:gravity="center"
             android:lines="1"
-            android:text="@string/explore_pop_about"
+            android:text="@string/disFavoriteIt"
             android:textColor="#222222"
             android:textSize="18sp" />
 

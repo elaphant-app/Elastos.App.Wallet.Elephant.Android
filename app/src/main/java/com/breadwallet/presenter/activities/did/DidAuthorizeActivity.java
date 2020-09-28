@@ -33,9 +33,9 @@ import com.breadwallet.tools.manager.BRSharedPrefs;
 import com.breadwallet.tools.security.BRKeyStore;
 import com.breadwallet.tools.sqlite.ProfileDataSource;
 import com.breadwallet.tools.threads.executor.BRExecutor;
-import com.breadwallet.tools.util.BRConstants;
 import com.breadwallet.tools.util.StringUtil;
 import com.breadwallet.tools.util.Utils;
+import com.breadwallet.wallet.wallets.ethereum.WalletEthManager;
 import com.elastos.jni.AuthorizeManager;
 import com.elastos.jni.Constants;
 import com.elastos.jni.UriFactory;
@@ -76,9 +76,9 @@ public class DidAuthorizeActivity extends BaseSettingsActivity {
     }
 
     private String mUri;
-
+    private boolean isOnEla = true;
     private LoadingDialog mLoadingDialog;
-
+    private boolean isInternal = true;
     private UriFactory uriFactory;
 
     @Override
@@ -91,10 +91,15 @@ public class DidAuthorizeActivity extends BaseSettingsActivity {
                 Uri uri = intent.getData();
                 Log.i(TAG, "server mUri: " + uri.toString());
                 mUri = uri.toString();
+                isInternal = false;
             } else {
                 mUri = intent.getStringExtra(Constants.INTENT_EXTRA_KEY.META_EXTRA);
+                isInternal = true;
             }
         }
+
+
+
         initView();
         initListener();
         initData();
@@ -133,6 +138,12 @@ public class DidAuthorizeActivity extends BaseSettingsActivity {
         if (StringUtil.isNullOrEmpty(mUri)) return;
         uriFactory = new UriFactory();
         uriFactory.parse(mUri);
+
+        if(uriFactory.getHost().equals("identity")){
+            isOnEla = true;
+        }else if(uriFactory.getHost().equals("ethsign")){
+            isOnEla = false;
+        }
 
         mAppNameTv.setText(uriFactory.getAppName());
         mWillTv.setText(String.format(getString(R.string.Did_Will_Get), uriFactory.getAppName()));
@@ -298,19 +309,35 @@ public class DidAuthorizeActivity extends BaseSettingsActivity {
         }
 
         final String did = uriFactory.getDID();
+        final String address = uriFactory.getAddress();
         final String appId = uriFactory.getAppID();
         String appName = uriFactory.getAppName();
         String PK = uriFactory.getPublicKey();
         String randomNumber = uriFactory.getRandomNumber();
         final String target = uriFactory.getTarget();
-        if(StringUtil.isNullOrEmpty(did) || StringUtil.isNullOrEmpty(appId) || StringUtil.isNullOrEmpty(appName)
-                || StringUtil.isNullOrEmpty(PK) || StringUtil.isNullOrEmpty(randomNumber)) {
-            Toast.makeText(DidAuthorizeActivity.this, "invalid params", Toast.LENGTH_SHORT).show();
-            finish();
-            return;
+        if(isOnEla){
+            if(StringUtil.isNullOrEmpty(did) || StringUtil.isNullOrEmpty(appId) || StringUtil.isNullOrEmpty(appName)
+                    || StringUtil.isNullOrEmpty(PK) || StringUtil.isNullOrEmpty(randomNumber)) {
+                Toast.makeText(DidAuthorizeActivity.this, "invalid params", Toast.LENGTH_SHORT).show();
+                finish();
+                return;
+            }
+        }else{
+            if(StringUtil.isNullOrEmpty(address) || StringUtil.isNullOrEmpty(appId) || StringUtil.isNullOrEmpty(appName)
+                    || StringUtil.isNullOrEmpty(PK) || StringUtil.isNullOrEmpty(randomNumber)) {
+                Toast.makeText(DidAuthorizeActivity.this, "invalid params", Toast.LENGTH_SHORT).show();
+                finish();
+                return;
+            }
         }
 
-        boolean isValid = AuthorizeManager.verify(DidAuthorizeActivity.this, did, PK, appName, appId);
+        boolean isValid;
+        if(isOnEla){
+            isValid = AuthorizeManager.verify(DidAuthorizeActivity.this, did, PK, appName, appId);
+        }else{
+            WalletEthManager wem = WalletEthManager.getInstance(DidAuthorizeActivity.this);
+            isValid = wem.getAddress().toLowerCase().equals(address.toLowerCase());
+        }
         if (!isValid) {
             Toast.makeText(this, "verify failed", Toast.LENGTH_SHORT).show();
             finish();
@@ -386,7 +413,7 @@ public class DidAuthorizeActivity extends BaseSettingsActivity {
             public void run() {
                 try {
                     UiUtils.callbackDataNeedSign(DidAuthorizeActivity.this, backurl, entity);
-                    UiUtils.returnDataNeedSign(DidAuthorizeActivity.this, returnUrl, Data, Sign, appId, target);
+                    UiUtils.returnDataNeedSign(DidAuthorizeActivity.this, returnUrl, Data, Sign, appId, target, isInternal);
                 } catch (Exception e) {
                     showCallbackError();
                 } finally {
